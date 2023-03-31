@@ -1,0 +1,21 @@
+Entity Framework
+  Many to Many Relationship
+  *https://learn.microsoft.com/en-us/ef/core/modeling/relationships/many-to-many
+  --Using Many to many with navigations to join entity
+
+  Primary Key
+  *https://learn.microsoft.com/en-us/ef/core/modeling/keys?tabs=fluent-api
+  --FluentAPI for making the topic name a primary key
+
+  *https://learn.microsoft.com/en-us/ef/core/modeling/relationships/one-to-one
+  -- can a foreign key be a primary key
+  -- This is often called a PK-to-PK relationship. This is only possible when the principal and dependent types have the same primary key types, and the resulting relationship is always required, since the primary key of the dependent cannot be nullable.
+
+
+SQLite Database
+  *Get Nuget Pakages
+  -- https://stackoverflow.com/questions/15292880/create-sqlite-database-and-table
+  -- SQLite and Microsoft.EntityFrameworkCore.Sqlite
+  
+  Connection String
+  -- Connection strings in a UWP application are typically a SQLite connection that just specifies a local filename. They typically do not contain sensitive information, and do not need to be changed as an application is deployed. As such, these connection strings are usually fine to be left in code, as shown below
