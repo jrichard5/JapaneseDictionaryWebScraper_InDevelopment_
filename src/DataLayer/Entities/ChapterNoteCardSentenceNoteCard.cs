@@ -8,7 +8,7 @@ namespace DataLayer.Entities
 {
     public class ChapterNoteCardSentenceNoteCard
     {
-        public string TopicName { get; set; }
-        public string ItemQuestion { get; set; }
+        public string ChapterNoteCardTopicName { get; set; }
+        public string SentenceNoteCardItemQuestion { get; set; }
     }
 }

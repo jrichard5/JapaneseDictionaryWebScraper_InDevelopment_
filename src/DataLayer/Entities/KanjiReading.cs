@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace DataLayer.Entities
 {
-    public class KanjiReadings
+    public class KanjiReading
     {
-        public string TopicName { get; set; }
+        //This name is so that entityframework can use <principal entity type name><principal keyproperty name> to discover it as a foreign key
+        public string ChapterNoteCardTopicName { get; set; }
         public string TypeOfReading { get; set; }
         public string Reading { get; set; }
     }
