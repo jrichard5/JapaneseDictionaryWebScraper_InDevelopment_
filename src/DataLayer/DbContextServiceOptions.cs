@@ -11,6 +11,7 @@ namespace DataLayer
     {
         public static void AddDiForDbContext(this IServiceCollection services)
         {
+            
             string DbPath;
             var folder = Environment.SpecialFolder.LocalApplicationData;
             var path = Environment.GetFolderPath(folder);
@@ -18,10 +19,11 @@ namespace DataLayer
             Directory.CreateDirectory(newAppDataFolder);
             DbPath = System.IO.Path.Combine(newAppDataFolder, "kdb.db");
 
-            services.AddDbContext<KanjiDbContext>(options =>
-            {
-                options.UseSqlite($"Data Source={DbPath}");
-            });
+            services.AddDbContext<KanjiDbContext>();
+            //    options =>
+            //{
+            //    options.UseSqlite($"Data Source={DbPath}");
+            //});
             services.AddScoped<IGenericRepo<SentenceNoteCard>, GenericRepo<SentenceNoteCard>>();
         }
     }

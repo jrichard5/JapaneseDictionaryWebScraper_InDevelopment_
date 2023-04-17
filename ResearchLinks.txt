@@ -49,7 +49,15 @@ Dependency Injection For a Console App
   * https://stackoverflow.com/questions/44865144/how-is-a-scoped-service-instance-handled-in-a-net-core-console-application
   ** chatgpt was the easiest to find this answer
   **but scope.ServiceProvider.GetrequiredService<> is how you get the thingy
+  ** Microsoft notes that serviceProvider.Dipose gets calls dispose on services
 
+Dependency injection and "The Service Locator anti-pattern"
+  *https://stackoverflow.com/questions/65490514/asp-net-why-avoid-using-getservice-in-a-factory
+  * Microsoft has a section about that.  https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-guidelines?source=recommendations
+
+
+ ** ASP.NET Core has built-in support for dependency injection (DI).  (but not console app)
+ **  ASP.NET and background services have built in support for DI (chatgpt)
 ___
 Nuget packages
 

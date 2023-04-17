@@ -8,22 +8,22 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DataLayer.Migrations
 {
     /// <inheritdoc />
-    public partial class SeedOneNotecard : Migration
+    public partial class FirstMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Chapters",
+                name: "Category",
                 columns: table => new
                 {
-                    TopicName = table.Column<string>(type: "TEXT", nullable: false),
-                    TopicDefinition = table.Column<string>(type: "TEXT", nullable: false),
-                    GradeLevel = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CategoryName = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Chapters", x => x.TopicName);
+                    table.PrimaryKey("PK_Category", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -56,21 +56,23 @@ namespace DataLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ExtraKanjiInfos",
+                name: "Chapters",
                 columns: table => new
                 {
                     TopicName = table.Column<string>(type: "TEXT", nullable: false),
-                    NewspaperRank = table.Column<int>(type: "INTEGER", nullable: false),
-                    JLPTLevel = table.Column<int>(type: "INTEGER", nullable: false)
+                    TopicDefinition = table.Column<string>(type: "TEXT", nullable: false),
+                    GradeLevel = table.Column<int>(type: "INTEGER", nullable: false),
+                    LastTimeAccess = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CategoryId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ExtraKanjiInfos", x => x.TopicName);
+                    table.PrimaryKey("PK_Chapters", x => x.TopicName);
                     table.ForeignKey(
-                        name: "FK_ExtraKanjiInfos_Chapters_TopicName",
-                        column: x => x.TopicName,
-                        principalTable: "Chapters",
-                        principalColumn: "TopicName",
+                        name: "FK_Chapters_Category_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Category",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -98,14 +100,29 @@ namespace DataLayer.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Chapters",
-                columns: new[] { "TopicName", "GradeLevel", "TopicDefinition" },
-                values: new object[,]
+            migrationBuilder.CreateTable(
+                name: "ExtraKanjiInfos",
+                columns: table => new
                 {
-                    { "日", 1, "day, sun, Japan" },
-                    { "毎", 2, "every" }
+                    TopicName = table.Column<string>(type: "TEXT", nullable: false),
+                    NewspaperRank = table.Column<int>(type: "INTEGER", nullable: false),
+                    JLPTLevel = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExtraKanjiInfos", x => x.TopicName);
+                    table.ForeignKey(
+                        name: "FK_ExtraKanjiInfos_Chapters_TopicName",
+                        column: x => x.TopicName,
+                        principalTable: "Chapters",
+                        principalColumn: "TopicName",
+                        onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.InsertData(
+                table: "Category",
+                columns: new[] { "Id", "CategoryName" },
+                values: new object[] { 1, "Japanese Vocab" });
 
             migrationBuilder.InsertData(
                 table: "KanjiReadings",
@@ -120,7 +137,16 @@ namespace DataLayer.Migrations
             migrationBuilder.InsertData(
                 table: "Sentences",
                 columns: new[] { "ItemQuestion", "Hint", "IsUserWantsToFocusOn", "ItemAnswer", "LastTimeAccess", "MemorizationLevel" },
-                values: new object[] { "毎日", "まい·にち", false, "every day​", new DateTime(2023, 4, 3, 16, 33, 24, 551, DateTimeKind.Local).AddTicks(492), 0 });
+                values: new object[] { "毎日", "まい·にち", false, "every day​", new DateTime(2023, 4, 16, 23, 35, 55, 375, DateTimeKind.Local).AddTicks(3248), 0 });
+
+            migrationBuilder.InsertData(
+                table: "Chapters",
+                columns: new[] { "TopicName", "CategoryId", "GradeLevel", "LastTimeAccess", "TopicDefinition" },
+                values: new object[,]
+                {
+                    { "日", 1, 1, new DateTime(2023, 4, 16, 23, 35, 55, 375, DateTimeKind.Local).AddTicks(3188), "day, sun, Japan" },
+                    { "毎", 1, 2, new DateTime(2023, 4, 16, 23, 35, 55, 375, DateTimeKind.Local).AddTicks(3217), "every" }
+                });
 
             migrationBuilder.InsertData(
                 table: "ChapterSentences",
@@ -135,6 +161,11 @@ namespace DataLayer.Migrations
                 table: "ExtraKanjiInfos",
                 columns: new[] { "TopicName", "JLPTLevel", "NewspaperRank" },
                 values: new object[] { "日", 5, 1 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Chapters_CategoryId",
+                table: "Chapters",
+                column: "CategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ChapterSentences_SentenceNoteCardItemQuestion",
@@ -159,6 +190,9 @@ namespace DataLayer.Migrations
 
             migrationBuilder.DropTable(
                 name: "Chapters");
+
+            migrationBuilder.DropTable(
+                name: "Category");
         }
     }
 }

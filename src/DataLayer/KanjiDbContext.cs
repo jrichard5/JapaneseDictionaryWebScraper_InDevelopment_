@@ -6,32 +6,39 @@ namespace DataLayer
 {
     public class KanjiDbContext : DbContext
     {
-
         //private string DbPath { get; }
+        //Can't have a default constructor since I start using DI.  https://stackoverflow.com/questions/44574358/ef-core-no-database-provider-has-been-configured-for-this-dbcontext
         public KanjiDbContext()
         {
-            /*
+            //    /*
+            //    var folder = Environment.SpecialFolder.LocalApplicationData;
+            //    var path = Environment.GetFolderPath(folder);
+            //    var newAppDataFolder = Path.Join(path, @"zzNihongoDb\");
+            //    Directory.CreateDirectory(newAppDataFolder);
+            //    DbPath = System.IO.Path.Combine(newAppDataFolder, "kdb.db");
+            //   // 
+            //    */
+        }
+
+        public KanjiDbContext(DbContextOptions<KanjiDbContext> options) : base(options)
+        {
+            Console.WriteLine("using the dbcontextoptions constructor");
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            //Maybe can get rid of with static IHostBuilder CreateHostBuilder(string[] args) https://stackoverflow.com/questions/59796411/unable-to-create-an-object-of-type-applicationdbcontext-for-the-different-pat.https://learn.microsoft.com/en-us/ef/core/cli/dbcontext-creation?tabs=dotnet-core-cli  
+            Debug.WriteLine("using onconfig dbcontext");
+            Console.WriteLine("using onconfig dbcontext, want for migrations.  Removed connection String from the AddDbContext connection string");
+
+            string DbPath;
             var folder = Environment.SpecialFolder.LocalApplicationData;
             var path = Environment.GetFolderPath(folder);
             var newAppDataFolder = Path.Join(path, @"zzNihongoDb\");
             Directory.CreateDirectory(newAppDataFolder);
             DbPath = System.IO.Path.Combine(newAppDataFolder, "kdb.db");
-           // 
-            */
-        }
 
-        public KanjiDbContext(DbContextOptions<KanjiDbContext> options) : base(options)
-        {
-
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            /*   Dont need anymore since I am using DI
-            Console.WriteLine("Using databasefile " +  DbPath);
             optionsBuilder.UseSqlite($"Data Source={DbPath}");
-
-            */
             //TODO: do I need this??
             //base.OnConfiguring(optionsBuilder);
         }
@@ -65,9 +72,12 @@ namespace DataLayer
                 .HasForeignKey<KanjiNoteCard>(knc => knc.TopicName)
                 .IsRequired();
 
+            modelBuilder.Entity<Category>().HasData(
+                new Category { Id = 1, CategoryName = "Japanese Vocab" }
+                );
             modelBuilder.Entity<ChapterNoteCard>().HasData(
-                    new ChapterNoteCard { TopicName = "日", TopicDefinition = "day, sun, Japan", GradeLevel = 1 },
-                    new ChapterNoteCard { TopicName = "毎", TopicDefinition = "every", GradeLevel = 2  }
+                    new ChapterNoteCard { TopicName = "日", TopicDefinition = "day, sun, Japan", GradeLevel = 1, CategoryId = 1, LastTimeAccess = DateTime.Now},
+                    new ChapterNoteCard { TopicName = "毎", TopicDefinition = "every", GradeLevel = 2, CategoryId = 1, LastTimeAccess = DateTime.Now }
                 );
             modelBuilder.Entity<KanjiNoteCard>().HasData(
                 new KanjiNoteCard { TopicName = "日", JLPTLevel = 5, NewspaperRank = 1 }
@@ -94,6 +104,8 @@ namespace DataLayer
                     LastTimeAccess = DateTime.Now
                 }
                 ) ;
+
+            
 
             //base.OnModelCreating(modelBuilder);
         }

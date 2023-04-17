@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataLayer.Migrations
 {
     [DbContext(typeof(KanjiDbContext))]
-    [Migration("20230403213324_SeedOneNotecard")]
-    partial class SeedOneNotecard
+    [Migration("20230417043555_FirstMigration")]
+    partial class FirstMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,13 +20,41 @@ namespace DataLayer.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.4");
 
+            modelBuilder.Entity("DataLayer.Entities.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Category");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CategoryName = "Japanese Vocab"
+                        });
+                });
+
             modelBuilder.Entity("DataLayer.Entities.ChapterNoteCard", b =>
                 {
                     b.Property<string>("TopicName")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("GradeLevel")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("LastTimeAccess")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TopicDefinition")
                         .IsRequired()
@@ -34,19 +62,25 @@ namespace DataLayer.Migrations
 
                     b.HasKey("TopicName");
 
+                    b.HasIndex("CategoryId");
+
                     b.ToTable("Chapters");
 
                     b.HasData(
                         new
                         {
                             TopicName = "日",
+                            CategoryId = 1,
                             GradeLevel = 1,
+                            LastTimeAccess = new DateTime(2023, 4, 16, 23, 35, 55, 375, DateTimeKind.Local).AddTicks(3188),
                             TopicDefinition = "day, sun, Japan"
                         },
                         new
                         {
                             TopicName = "毎",
+                            CategoryId = 1,
                             GradeLevel = 2,
+                            LastTimeAccess = new DateTime(2023, 4, 16, 23, 35, 55, 375, DateTimeKind.Local).AddTicks(3217),
                             TopicDefinition = "every"
                         });
                 });
@@ -171,9 +205,20 @@ namespace DataLayer.Migrations
                             Hint = "まい·にち",
                             IsUserWantsToFocusOn = false,
                             ItemAnswer = "every day​",
-                            LastTimeAccess = new DateTime(2023, 4, 3, 16, 33, 24, 551, DateTimeKind.Local).AddTicks(492),
+                            LastTimeAccess = new DateTime(2023, 4, 16, 23, 35, 55, 375, DateTimeKind.Local).AddTicks(3248),
                             MemorizationLevel = 0
                         });
+                });
+
+            modelBuilder.Entity("DataLayer.Entities.ChapterNoteCard", b =>
+                {
+                    b.HasOne("DataLayer.Entities.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("DataLayer.Entities.ChapterNoteCardSentenceNoteCard", b =>
