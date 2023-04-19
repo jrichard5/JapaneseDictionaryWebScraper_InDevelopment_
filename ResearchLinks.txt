@@ -11,6 +11,14 @@ Entity Framework
   -- can a foreign key be a primary key
   -- This is often called a PK-to-PK relationship. This is only possible when the principal and dependent types have the same primary key types, and the resulting relationship is always required, since the primary key of the dependent cannot be nullable.
 
+  --Inheritance rather than pk-to-pk
+  ----https://learn.microsoft.com/en-us/ef/core/modeling/inheritance
+  ---- sounds like I would have to do a join every time I wanted both. Original plan was to call table to get all Chapters, and then if it was a kanji, get the extra data.
+
+ -- inheritance vs composition, OOOO WHICH TO CHOOSE
+ ---- ORM (aka EF) feels like i should do it code based
+ ---- but i like foreign keys, so foreign keys it is
+
 
 SQLite Database
   *Get Nuget Pakages

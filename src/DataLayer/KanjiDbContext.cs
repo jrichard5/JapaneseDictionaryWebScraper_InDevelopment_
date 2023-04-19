@@ -49,7 +49,6 @@ namespace DataLayer
         public override void Dispose()
         {
             Console.WriteLine("context is being disposed of.....in 3 .... 2 .... 1.............");
-            Debug.WriteLine("The Context has been disposed of.....I think....");
             base.Dispose();
             Debug.WriteLine("The Context has been disposed of.....I think....");
         }
@@ -60,6 +59,7 @@ namespace DataLayer
             modelBuilder.Entity<SentenceNoteCard>().HasKey(s => s.ItemQuestion);
             modelBuilder.Entity<KanjiReading>().HasKey(kr => new { kr.ChapterNoteCardTopicName, kr.TypeOfReading, kr.Reading });
             modelBuilder.Entity<KanjiNoteCard>().HasKey(knc => knc.TopicName);
+            modelBuilder.Entity<JapaneseWordNoteCard>().HasKey(jwnc => jwnc.ItemQuestion);
 
             modelBuilder.Entity<ChapterNoteCard>()
                 .HasMany(k => k.Sentences)
@@ -72,18 +72,29 @@ namespace DataLayer
                 .HasForeignKey<KanjiNoteCard>(knc => knc.TopicName)
                 .IsRequired();
 
+            modelBuilder.Entity<JapaneseWordNoteCard>()
+                .HasOne(jwnc => jwnc.SentenceNoteCard)
+                .WithOne()
+                .HasForeignKey<JapaneseWordNoteCard>(jwnc => jwnc.ItemQuestion)
+                .IsRequired();
+
+            modelBuilder.Entity<ExtraJishoInfoOnBridge>()
+                .HasOne(extra => extra.ChapterNoteCardSentenceNoteCard)
+                .WithOne(cncsnc => cncsnc.ExtraJishoInfo)
+                .HasForeignKey<ExtraJishoInfoOnBridge>(e => new { e.ChapterNoteCardTopicName, e.SentenceNoteCardItemQuestion });
+
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, CategoryName = "Japanese Vocab" }
                 );
             modelBuilder.Entity<ChapterNoteCard>().HasData(
-                    new ChapterNoteCard { TopicName = "日", TopicDefinition = "day, sun, Japan", GradeLevel = 1, CategoryId = 1, LastTimeAccess = DateTime.Now},
+                    new ChapterNoteCard { TopicName = "日", TopicDefinition = "day, sun, Japan", GradeLevel = 1, CategoryId = 1, LastTimeAccess = DateTime.Now },
                     new ChapterNoteCard { TopicName = "毎", TopicDefinition = "every", GradeLevel = 2, CategoryId = 1, LastTimeAccess = DateTime.Now }
                 );
             modelBuilder.Entity<KanjiNoteCard>().HasData(
                 new KanjiNoteCard { TopicName = "日", JLPTLevel = 5, NewspaperRank = 1 }
                 );
             modelBuilder.Entity<KanjiReading>().HasData(
-                new KanjiReading { ChapterNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "ひ" },　　
+                new KanjiReading { ChapterNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "ひ" },
                 new KanjiReading { ChapterNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "び" },
                 new KanjiReading { ChapterNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "か" }
                 );
@@ -91,6 +102,11 @@ namespace DataLayer
             modelBuilder.Entity<ChapterNoteCardSentenceNoteCard>().HasData(
                 new ChapterNoteCardSentenceNoteCard { ChapterNoteCardTopicName = "毎", SentenceNoteCardItemQuestion = "毎日" },
                 new ChapterNoteCardSentenceNoteCard { ChapterNoteCardTopicName = "日", SentenceNoteCardItemQuestion = "毎日" }
+                );
+
+            modelBuilder.Entity<ExtraJishoInfoOnBridge>().HasData(
+                    new ExtraJishoInfoOnBridge { Id = 1, ChapterNoteCardTopicName = "毎", SentenceNoteCardItemQuestion = "毎日", PageNumber = 1, Order = 1 },
+                    new ExtraJishoInfoOnBridge { Id = 2, ChapterNoteCardTopicName = "日", SentenceNoteCardItemQuestion = "毎日", PageNumber = 1, Order = 1 }
                 );
 
             modelBuilder.Entity<SentenceNoteCard>().HasData(
@@ -103,10 +119,15 @@ namespace DataLayer
                     MemorizationLevel = 0,
                     LastTimeAccess = DateTime.Now
                 }
-                ) ;
+                );
 
-            
-
+            modelBuilder.Entity<JapaneseWordNoteCard>().HasData(
+                new JapaneseWordNoteCard
+                {
+                    ItemQuestion = "毎日",
+                    IsCommonWord = true,
+                    JLPTLevel = 5
+                });
             //base.OnModelCreating(modelBuilder);
         }
 
@@ -114,6 +135,8 @@ namespace DataLayer
         public DbSet<SentenceNoteCard> Sentences { get; set; }
         public virtual DbSet<KanjiNoteCard> ExtraKanjiInfos { get; set; }
         public virtual DbSet<KanjiReading> KanjiReadings { get; set; }
-        public virtual DbSet<ChapterNoteCardSentenceNoteCard> ChapterSentences { get; set; }    
+        public virtual DbSet<ChapterNoteCardSentenceNoteCard> ChapterSentences { get; set; }
+        public virtual DbSet<JapaneseWordNoteCard> JapaneseWordNoteCards { get; set; }
+        public virtual DbSet<ExtraJishoInfoOnBridge> ExtraJishoInfos { get; set; }
     }
 }
