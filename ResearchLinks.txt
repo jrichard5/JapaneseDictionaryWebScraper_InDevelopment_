@@ -1,0 +1,81 @@
+Entity Framework
+  Many to Many Relationship
+  *https://learn.microsoft.com/en-us/ef/core/modeling/relationships/many-to-many
+  --Using Many to many with navigations to join entity
+
+  Primary Key
+  *https://learn.microsoft.com/en-us/ef/core/modeling/keys?tabs=fluent-api
+  --FluentAPI for making the topic name a primary key
+
+  *https://learn.microsoft.com/en-us/ef/core/modeling/relationships/one-to-one
+  -- can a foreign key be a primary key
+  -- This is often called a PK-to-PK relationship. This is only possible when the principal and dependent types have the same primary key types, and the resulting relationship is always required, since the primary key of the dependent cannot be nullable.
+
+  --Inheritance rather than pk-to-pk
+  ----https://learn.microsoft.com/en-us/ef/core/modeling/inheritance
+  ---- sounds like I would have to do a join every time I wanted both. Original plan was to call table to get all Chapters, and then if it was a kanji, get the extra data.
+
+ -- inheritance vs composition, OOOO WHICH TO CHOOSE
+ ---- ORM (aka EF) feels like i should do it code based
+ ---- but i like foreign keys, so foreign keys it is
+
+
+SQLite Database
+  *Get Nuget Pakages
+  -- https://stackoverflow.com/questions/15292880/create-sqlite-database-and-table
+  -- SQLite and Microsoft.EntityFrameworkCore.Sqlite
+  
+  Connection String
+  -- Connection strings in a UWP application are typically a SQLite connection that just specifies a local filename. They typically do not contain sensitive information, and do not need to be changed as an application is deployed. As such, these connection strings are usually fine to be left in code, as shown below
+
+  Got SQLite CLI tools
+  Opened sqlite3.exe -> copied database to the directory where sqlite3.exe was.  -> .open KanjiDatabasePrototype.db
+  From:  https://stackoverflow.com/questions/26015686/how-to-open-sqlite-files
+    sqlite> .dump
+    sqlite> .tables
+    sqlite> select * from some_table;
+
+
+
+Dependency Injection For a Console App
+  *Tim Corey ---- need to create instance using var svcCSV =     ActivatorUtilities.GetServiceOrCreateInstance<ExportSentencesCSV>(host.Services);
+  svcCSV.CreateCSV();
+  ****I don't get why I need to do this when ASP.NET feels like it takes care it for me
+  *https://stackoverflow.com/questions/55983541/understanding-net-core-dependency-injection-in-a-console-app
+  ****sinec I want a scope context,  var serviceProvider =      services.BuildServiceProvider();
+
+    using (var scope = serviceProvider.CreateScope())
+    {
+        var worker = serviceProvider.GetService<Worker>();
+        worker.Run();
+    }
+
+****
+
+
+  Disposing on the dbcontext  (thank you https://stackoverflow.com/questions/55983541/understanding-net-core-dependency-injection-in-a-console-app)
+  * https://stackoverflow.com/questions/44865144/how-is-a-scoped-service-instance-handled-in-a-net-core-console-application
+  ** chatgpt was the easiest to find this answer
+  **but scope.ServiceProvider.GetrequiredService<> is how you get the thingy
+  ** Microsoft notes that serviceProvider.Dipose gets calls dispose on services
+
+Dependency injection and "The Service Locator anti-pattern"
+  *https://stackoverflow.com/questions/65490514/asp-net-why-avoid-using-getservice-in-a-factory
+  * Microsoft has a section about that.  https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-guidelines?source=recommendations
+
+
+ ** ASP.NET Core has built-in support for dependency injection (DI).  (but not console app)
+ **  ASP.NET and background services have built in support for DI (chatgpt)
+___
+Nuget packages
+
+CSV Helper
+
+
+
+___
+Stuff not yet implemented
+* https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-usage
+  need to have dependency injection for repos.. maybe other stuff
+
+Need to only create for directory at setup.
