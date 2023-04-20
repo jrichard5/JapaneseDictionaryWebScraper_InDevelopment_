@@ -3,6 +3,7 @@ using System;
 using DataLayer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataLayer.Migrations
 {
     [DbContext(typeof(KanjiDbContext))]
-    partial class KanjiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230420003239_minorChangesToKanjiReadings")]
+    partial class minorChangesToKanjiReadings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.4");
@@ -29,7 +32,7 @@ namespace DataLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Category");
 
                     b.HasData(
                         new
@@ -71,7 +74,7 @@ namespace DataLayer.Migrations
                             TopicName = "日",
                             CategoryId = 1,
                             GradeLevel = 1,
-                            LastTimeAccess = new DateTime(2023, 4, 19, 20, 33, 41, 99, DateTimeKind.Local).AddTicks(8586),
+                            LastTimeAccess = new DateTime(2023, 4, 19, 19, 32, 39, 463, DateTimeKind.Local).AddTicks(8643),
                             TopicDefinition = "day, sun, Japan"
                         },
                         new
@@ -79,7 +82,7 @@ namespace DataLayer.Migrations
                             TopicName = "毎",
                             CategoryId = 1,
                             GradeLevel = 2,
-                            LastTimeAccess = new DateTime(2023, 4, 19, 20, 33, 41, 99, DateTimeKind.Local).AddTicks(8613),
+                            LastTimeAccess = new DateTime(2023, 4, 19, 19, 32, 39, 463, DateTimeKind.Local).AddTicks(8669),
                             TopicDefinition = "every"
                         });
                 });
@@ -274,7 +277,7 @@ namespace DataLayer.Migrations
                             Hint = "まい·にち",
                             IsUserWantsToFocusOn = false,
                             ItemAnswer = "every day​",
-                            LastTimeAccess = new DateTime(2023, 4, 19, 20, 33, 41, 99, DateTimeKind.Local).AddTicks(8678),
+                            LastTimeAccess = new DateTime(2023, 4, 19, 19, 32, 39, 463, DateTimeKind.Local).AddTicks(8711),
                             MemorizationLevel = 0
                         });
                 });

@@ -11,6 +11,6 @@ IHost host = Host.CreateDefaultBuilder(args)
     }).Build();
 
 
-ParseKanjiHtmlFromFile.testFilePath();
+ParseKanjiHtmlFromFile.AddTestFileToDatabase(host);
 
 Console.WriteLine("The Program has ended....beep boop bop");

@@ -48,7 +48,6 @@ namespace DataLayer
 
         public override void Dispose()
         {
-            Console.WriteLine("context is being disposed of.....in 3 .... 2 .... 1.............");
             base.Dispose();
             Debug.WriteLine("The Context has been disposed of.....I think....");
         }
@@ -57,7 +56,7 @@ namespace DataLayer
         {
             modelBuilder.Entity<ChapterNoteCard>().HasKey(c => c.TopicName);
             modelBuilder.Entity<SentenceNoteCard>().HasKey(s => s.ItemQuestion);
-            modelBuilder.Entity<KanjiReading>().HasKey(kr => new { kr.ChapterNoteCardTopicName, kr.TypeOfReading, kr.Reading });
+            modelBuilder.Entity<KanjiReading>().HasKey(kr => new { kr.KanjiNoteCardTopicName, kr.TypeOfReading, kr.Reading });
             modelBuilder.Entity<KanjiNoteCard>().HasKey(knc => knc.TopicName);
             modelBuilder.Entity<JapaneseWordNoteCard>().HasKey(jwnc => jwnc.ItemQuestion);
 
@@ -83,6 +82,10 @@ namespace DataLayer
                 .WithOne(cncsnc => cncsnc.ExtraJishoInfo)
                 .HasForeignKey<ExtraJishoInfoOnBridge>(e => new { e.ChapterNoteCardTopicName, e.SentenceNoteCardItemQuestion });
 
+            //Can't use default value for datetime.now, because when the migration happens, it gets datetime, and then assigns that specfic time as the default value.  So, we use hasdefaultvaluesql.
+            modelBuilder.Entity<ChapterNoteCard>()
+                .Property(cnc => cnc.LastTimeAccess).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, CategoryName = "Japanese Vocab" }
                 );
@@ -94,9 +97,9 @@ namespace DataLayer
                 new KanjiNoteCard { TopicName = "日", JLPTLevel = 5, NewspaperRank = 1 }
                 );
             modelBuilder.Entity<KanjiReading>().HasData(
-                new KanjiReading { ChapterNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "ひ" },
-                new KanjiReading { ChapterNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "び" },
-                new KanjiReading { ChapterNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "か" }
+                new KanjiReading { KanjiNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "ひ" },
+                new KanjiReading { KanjiNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "び" },
+                new KanjiReading { KanjiNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "か" }
                 );
 
             modelBuilder.Entity<ChapterNoteCardSentenceNoteCard>().HasData(
@@ -138,5 +141,6 @@ namespace DataLayer
         public virtual DbSet<ChapterNoteCardSentenceNoteCard> ChapterSentences { get; set; }
         public virtual DbSet<JapaneseWordNoteCard> JapaneseWordNoteCards { get; set; }
         public virtual DbSet<ExtraJishoInfoOnBridge> ExtraJishoInfos { get; set; }
+        public virtual DbSet<Category> Categories { get; set; }
     }
 }

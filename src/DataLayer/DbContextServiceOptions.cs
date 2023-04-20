@@ -24,7 +24,11 @@ namespace DataLayer
             //{
             //    options.UseSqlite($"Data Source={DbPath}");
             //});
-            services.AddScoped<IGenericRepo<SentenceNoteCard>, GenericRepo<SentenceNoteCard>>();
+            services.AddScoped<ISentenceNoteCardRepo, SentenceNoteCardRepo>();
+            services.AddScoped<IKanjiNoteCardRepo, KanjiNoteCardRepo>();
+            services.AddScoped<ICategoryRepo, CategoryRepo>();
+            services.AddScoped<IChapterNoteCardRepo, ChapterNoteCardRepo>();
+            services.AddScoped<IJapaneseWordNoteCardRepo, JapaneseWordNoteCardRepo>();
         }
     }
 }
