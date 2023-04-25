@@ -17,4 +17,12 @@
     <ProjectReference Include="..\DataLayer\DataLayer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\Etop\gitStuff\webscraperjisho\JishoWebScraper\src\WebScraper\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Users\Etop\gitStuff\webscraperjisho\JishoWebScraper\src\WebScraper\.editorconfig" />
+  </ItemGroup>
+
 </Project>
