@@ -10,8 +10,13 @@ IHost host = Host.CreateDefaultBuilder(args)
         
     }).Build();
 
+//Ctrl+K and Ctrl+F to autoformat a section
+//Ctrl+K and Ctrl+D to autoformat document
 
 //ParseKanjiHtmlFromFile.AddTestFileToDatabase(host);
-ParseWordsFromFile.GetJapaneseWordNoteCardFromFile();
+//ParseWordsFromFile.GetJapaneseWordNoteCardFromFile();
+
+await ParseWordsFromFile.AddWordsToDatabase(host);
+
 
 Console.WriteLine("The Program has ended....beep boop bop");

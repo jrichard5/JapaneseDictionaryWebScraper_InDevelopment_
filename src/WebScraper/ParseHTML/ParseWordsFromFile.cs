@@ -1,5 +1,6 @@
 ﻿using DataLayer.Entities;
 using DataLayer.IRepos;
+using DataLayer.Repositories;
 using HtmlAgilityPack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,21 +16,22 @@ namespace WebScraper.ParseHTML
 {
     public static class ParseWordsFromFile
     {
-        public static void AddWordsToDatabase(IHost host)
+        public async static Task AddWordsToDatabase(IHost host)
         {
             using (var scope = host.Services.CreateScope())
             {
                 var serviceProvider = scope.ServiceProvider;
-                var kanjiRepo = serviceProvider.GetRequiredService<IKanjiNoteCardRepo>();
-                var categoryRepo = serviceProvider.GetRequiredService<ICategoryRepo>();
+                var kanjiRepo = serviceProvider.GetRequiredService<IChapterNoteCardRepo>();
+                var jwncRepo = serviceProvider.GetRequiredService<IJapaneseWordNoteCardRepo>();
+
+                var notecardList = await GetJapaneseWordNoteCardFromFile(kanjiRepo);
+                await jwncRepo.AddAsync(notecardList);
             }
         }
 
-        public static void GetJapaneseWordNoteCardFromFile()
+        public async static Task<List<JapaneseWordNoteCard>> GetJapaneseWordNoteCardFromFile(IChapterNoteCardRepo chapterRepository)
         {
-            JapaneseWordNoteCard japaneseWord = new JapaneseWordNoteCard();
-            japaneseWord.SentenceNoteCard = new SentenceNoteCard();
-            japaneseWord.SentenceNoteCard.Chapters = new List<ChapterNoteCard>();
+            List<JapaneseWordNoteCard> notecards = new List<JapaneseWordNoteCard>();
 
             string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\一 - Jisho.org.htm";
 
@@ -40,9 +42,38 @@ namespace WebScraper.ParseHTML
             var kanjiDiv = doc.GetElementbyId("secondary");
 
             var kanjiFromPage = GetKanjiFromPage(kanjiDiv);
+            var kanjiNoteCard = await chapterRepository.GetChapterNoteCardByTopicName(kanjiFromPage);
 
-            GetAllInfo(mainResults);
+            //AddRange will change the list that called it
+            notecards.AddRange(GetAllInfo(mainResults, kanjiNoteCard));
+
+            var moreWordsNode = mainResults.SelectNodes(".//a").First(node => node.GetClasses().Contains("more"));
+            var moreWordsLink = "";
+            if (moreWordsNode != null)
+            {
+                moreWordsLink = moreWordsNode.GetAttributeValue("href", "");
+            }
             
+            //Only call 5 pages max
+            const int LINK_LIMIT = 5;
+            int currentLinkCount = 1;
+            while (moreWordsLink != "" && currentLinkCount < LINK_LIMIT)
+            {
+                Console.WriteLine(moreWordsLink);
+                //moreWordsLink = "";
+
+
+
+                //Wait time between each call
+                await Task.Delay(6000);
+                //ADD CURRENT COUNT TO BREAK IT OUT OF LIMIT
+                currentLinkCount++;
+            }
+
+            //if it has a link, need to do all this again on same page
+
+            return notecards;
+
         }
 
         private static string GetKanjiFromPage(HtmlNode startDiv)
@@ -50,13 +81,13 @@ namespace WebScraper.ParseHTML
             const int NUMBER_OF_KANJI_LOOK_FOR = 1;
 
             string resultCount = startDiv.SelectSingleNode(".//h4/span").InnerText;
-            
+
             var theNumberInArray = resultCount.Where(c => Char.IsDigit(c)).ToArray();
             var numberString = new String(theNumberInArray);
             int result = -1;
             Int32.TryParse(numberString, out result);
 
-            if (result == 1)
+            if (result == NUMBER_OF_KANJI_LOOK_FOR)
             {
                 var kanjiSpan = startDiv.Descendants().First(desc => desc.GetClasses().Contains("character"));
                 var theKanji = kanjiSpan.SelectSingleNode(".//a").InnerText.Trim();
@@ -70,23 +101,35 @@ namespace WebScraper.ParseHTML
             }
         }
 
-        private static void GetAllInfo(HtmlNode startDiv)
+        private static List<JapaneseWordNoteCard> GetAllInfo(HtmlNode startDiv, ChapterNoteCard kanji)
         {
             List<JapaneseWordNoteCard> japaneseWordNoteCards = new List<JapaneseWordNoteCard>();
 
             var primaryDiv = startDiv.Descendants().First(desc => desc.Id == "primary");
 
-            var wordDivs = primaryDiv.Descendants().Where(desc => 
+            var wordDivs = primaryDiv.Descendants().Where(desc =>
             {
                 var classes = desc.GetClasses();
                 return classes.Contains("concept_light") && classes.Contains("clearfix");
             }
             );
-            foreach ( var wordDiv in wordDivs)
+            foreach (var wordDiv in wordDivs)
             {
                 var japanNoteCard = new JapaneseWordNoteCard();
                 japanNoteCard.SentenceNoteCard = new SentenceNoteCard();
-                japanNoteCard.SentenceNoteCard.Chapters = new List<ChapterNoteCard>();
+                japanNoteCard.SentenceNoteCard.Chapters = new List<ChapterNoteCard>
+                {
+                    kanji
+                };
+
+                var word = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("text")).InnerText.Trim();
+                //The website I parse had words that didn't contain this kanji >.>
+                if (!word.Contains(kanji.TopicName))
+                {
+                    continue;
+                }
+                Console.WriteLine(word);
+                japanNoteCard.SentenceNoteCard.ItemQuestion = word;
 
 
                 var hintSpan = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("furigana"));
@@ -96,11 +139,9 @@ namespace WebScraper.ParseHTML
                     Console.WriteLine(hint);
                     japanNoteCard.SentenceNoteCard.Hint = hint;
                 }
-                
 
-                var word = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("text")).InnerText.Trim();
-                Console.WriteLine(word);
-                japanNoteCard.SentenceNoteCard.ItemQuestion = word;
+
+
 
 
 
@@ -133,7 +174,7 @@ namespace WebScraper.ParseHTML
                 if (definationDivs.Any())
                 {
                     var strings = new List<string>();
-                    foreach(var define in definationDivs)
+                    foreach (var define in definationDivs)
                     {
                         strings.Add(define.InnerText);
                     }
@@ -145,6 +186,7 @@ namespace WebScraper.ParseHTML
 
                 japaneseWordNoteCards.Add(japanNoteCard);
             }
+            return japaneseWordNoteCards;
         }
     }
 }
