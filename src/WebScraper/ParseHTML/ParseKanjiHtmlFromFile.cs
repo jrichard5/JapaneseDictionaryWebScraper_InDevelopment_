@@ -13,20 +13,27 @@ namespace WebScraper.ParseHTML
 {
     public static class ParseKanjiHtmlFromFile
     {
-        public async static void AddTestFileToDatabase(IHost host)
+        public async static Task AddTestFileToDatabase(IHost host)
         {
             using (var scope = host.Services.CreateScope())
             {
                 var serviceProvider = scope.ServiceProvider;
                 var kanjiRepo = serviceProvider.GetRequiredService<IKanjiNoteCardRepo>();
                 var categoryRepo = serviceProvider.GetRequiredService<ICategoryRepo>();
-                var kanjinotecard = await testFilePath(categoryRepo);
+                var testFilePathTuple = await testFilePath(categoryRepo);
+                var kanjinotecard = testFilePathTuple.Item1;
+                var url = testFilePathTuple.Item2;
 
-                await kanjiRepo.AddAsync(kanjinotecard);
+
+                await Task.Delay(1000);
+                await kanjiRepo.AddButSkipUniqueException(kanjinotecard);
+                Console.WriteLine("calling url" + url);
+                await Task.Delay(1000);
+                await ParseWordsFromFile.AddWordsToDatabase(host, url);
             }
         }
 
-        public async static Task<KanjiNoteCard> testFilePath(ICategoryRepo cateRepo)
+        public async static Task<(KanjiNoteCard, string)> testFilePath(ICategoryRepo cateRepo)
         {
             KanjiNoteCard testKanjiNoteCard = new KanjiNoteCard();
             testKanjiNoteCard.ChapterNoteCard = new ChapterNoteCard();
@@ -35,7 +42,7 @@ namespace WebScraper.ParseHTML
 
             List<KanjiReading> kanjiReadings = new List<KanjiReading>();
 
-            string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\一 #kanji - Jisho.org.htm";
+            string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\人 #kanji - Jisho.org.htm";
 
             var doc = new HtmlDocument();
             doc.Load(pathToTestFile);
@@ -62,18 +69,25 @@ namespace WebScraper.ParseHTML
                 Console.WriteLine("Programmer miss #1");
             }
 
+            var url = GetNextUrl(resultsDiv);
+
             GetGrade(resultsDiv, testKanjiNoteCard);
             GetJLPTLevel(resultsDiv, testKanjiNoteCard);
             GetNewspaperRank(resultsDiv, testKanjiNoteCard);
             GetReadings(resultsDiv, kanjiReadings, kanji);
             Console.WriteLine($"this should have something {kanjiReadings[0]}");
             testKanjiNoteCard.KanjiReadings = kanjiReadings;
-            return testKanjiNoteCard;
+            return (testKanjiNoteCard, url);
         }
 
 
 
-
+        private static string GetNextUrl(HtmlNode startDiv)
+        {
+            var urlLi = startDiv.SelectNodes(".//a").First(node => node.InnerText.StartsWith("Words containing")).GetAttributeValue("href", "");
+            Console.WriteLine(urlLi);
+            return urlLi;
+        }
 
         private static void GetReadings(HtmlNode startDiv, List<KanjiReading> readings, string kanji)
         {

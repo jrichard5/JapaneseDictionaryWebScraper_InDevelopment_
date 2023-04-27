@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace DataLayer.Repositories
 {
+
+    //Is the repository pattern suppose to be DbSets >.> monkaS i forgot
     public class JapaneseWordNoteCardRepo : GenericRepo<JapaneseWordNoteCard>, IJapaneseWordNoteCardRepo
     {
         public JapaneseWordNoteCardRepo(KanjiDbContext context) : base(context) { }
@@ -42,9 +44,9 @@ namespace DataLayer.Repositories
             var addedCards = await _dbContext.JapaneseWordNoteCards.Where(dbcard => cardsTopName.Contains(dbcard.ItemQuestion)).ToListAsync();
             var cardsToAdd = cards.RemoveAll(c => addedCards.Any(added => added.ItemQuestion == c.SentenceNoteCard.ItemQuestion));
 
-            Console.WriteLine("hi");
             foreach (var card in cards)
             {
+                Console.WriteLine("hi");
                 _dbContext.JapaneseWordNoteCards.Add(card);
             }
             await _dbContext.SaveChangesAsync();
