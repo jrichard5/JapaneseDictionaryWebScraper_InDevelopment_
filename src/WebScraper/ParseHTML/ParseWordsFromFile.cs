@@ -16,7 +16,7 @@ namespace WebScraper.ParseHTML
 {
     public static class ParseWordsFromFile
     {
-        public async static Task AddWordsToDatabase(IHost host)
+        public async static Task AddWordsToDatabase(IHost host, string url)
         {
             using (var scope = host.Services.CreateScope())
             {
@@ -24,17 +24,20 @@ namespace WebScraper.ParseHTML
                 var kanjiRepo = serviceProvider.GetRequiredService<IChapterNoteCardRepo>();
                 var jwncRepo = serviceProvider.GetRequiredService<IJapaneseWordNoteCardRepo>();
 
-                var notecardList = await GetJapaneseWordNoteCardFromFile(kanjiRepo);
+                var notecardList = await GetJapaneseWordNoteCardFromFile(kanjiRepo, url);
                 await jwncRepo.AddAsync(notecardList);
             }
         }
 
-        public async static Task<List<JapaneseWordNoteCard>> GetJapaneseWordNoteCardFromFile(IChapterNoteCardRepo chapterRepository)
+
+        private static int count = 0;
+        public async static Task<List<JapaneseWordNoteCard>> GetJapaneseWordNoteCardFromFile(IChapterNoteCardRepo chapterRepository, string url)
         {
+            var pageNumber = GetPageNumberFromURL(url);
             List<JapaneseWordNoteCard> notecards = new List<JapaneseWordNoteCard>();
 
-            string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\一 - Jisho.org.htm";
-
+            string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\人 - Jisho.org.htm";
+            string pathToTestFile2 = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\人 #words - Jisho.org.htm";
             var doc = new HtmlDocument();
             doc.Load(pathToTestFile);
 
@@ -44,8 +47,10 @@ namespace WebScraper.ParseHTML
             var kanjiFromPage = GetKanjiFromPage(kanjiDiv);
             var kanjiNoteCard = await chapterRepository.GetChapterNoteCardByTopicName(kanjiFromPage);
 
+            count = await chapterRepository.GetLastItemByTopicName(kanjiFromPage);
+
             //AddRange will change the list that called it
-            notecards.AddRange(GetAllInfo(mainResults, kanjiNoteCard));
+            notecards.AddRange(GetAllInfo(mainResults, kanjiNoteCard, pageNumber));
 
             var moreWordsNode = mainResults.SelectNodes(".//a").First(node => node.GetClasses().Contains("more"));
             var moreWordsLink = "";
@@ -55,17 +60,32 @@ namespace WebScraper.ParseHTML
             }
             
             //Only call 5 pages max
-            const int LINK_LIMIT = 5;
+            const int LINK_LIMIT = 2;
             int currentLinkCount = 1;
             while (moreWordsLink != "" && currentLinkCount < LINK_LIMIT)
             {
-                Console.WriteLine(moreWordsLink);
-                //moreWordsLink = "";
+                pageNumber++;
 
+                //Calling the webpage (not yet)
+                Console.WriteLine("waiting 5 secs before calling" + moreWordsLink);
+                await Task.Delay(2000);
+                var moreDoc = new HtmlDocument();
+                moreDoc.Load(pathToTestFile2);
+                var moreMainResults = moreDoc.GetElementbyId("main_results");
+                notecards.AddRange(GetAllInfo(moreMainResults, kanjiNoteCard, pageNumber));
 
-
+                Console.WriteLine("waiting 2 secs after calling" + moreWordsLink);
+                await Task.Delay(1000);
+                moreWordsNode = mainResults.SelectNodes(".//a").First(node => node.GetClasses().Contains("more"));
+                moreWordsLink = "";
+                if (moreWordsNode != null)
+                {
+                    moreWordsLink = moreWordsNode.GetAttributeValue("href", "");
+                }
+                Console.WriteLine("Will now call" + moreWordsLink);
+                moreWordsLink = "";
                 //Wait time between each call
-                await Task.Delay(6000);
+                await Task.Delay(1000);
                 //ADD CURRENT COUNT TO BREAK IT OUT OF LIMIT
                 currentLinkCount++;
             }
@@ -91,7 +111,6 @@ namespace WebScraper.ParseHTML
             {
                 var kanjiSpan = startDiv.Descendants().First(desc => desc.GetClasses().Contains("character"));
                 var theKanji = kanjiSpan.SelectSingleNode(".//a").InnerText.Trim();
-                Console.WriteLine(theKanji + "...though I expect it to be ?....because console doesn't have font");
                 return theKanji;
             }
             else
@@ -101,7 +120,7 @@ namespace WebScraper.ParseHTML
             }
         }
 
-        private static List<JapaneseWordNoteCard> GetAllInfo(HtmlNode startDiv, ChapterNoteCard kanji)
+        private static List<JapaneseWordNoteCard> GetAllInfo(HtmlNode startDiv, ChapterNoteCard kanji, int pageNumber)
         {
             List<JapaneseWordNoteCard> japaneseWordNoteCards = new List<JapaneseWordNoteCard>();
 
@@ -117,6 +136,7 @@ namespace WebScraper.ParseHTML
             {
                 var japanNoteCard = new JapaneseWordNoteCard();
                 japanNoteCard.SentenceNoteCard = new SentenceNoteCard();
+                japanNoteCard.SentenceNoteCard.ChapterSentences = new List<ChapterNoteCardSentenceNoteCard>();
                 japanNoteCard.SentenceNoteCard.Chapters = new List<ChapterNoteCard>
                 {
                     kanji
@@ -128,27 +148,26 @@ namespace WebScraper.ParseHTML
                 {
                     continue;
                 }
-                Console.WriteLine(word);
                 japanNoteCard.SentenceNoteCard.ItemQuestion = word;
+
+                japanNoteCard.SentenceNoteCard.ChapterSentences.Add(PageAndOrderNumber(pageNumber, kanji.TopicName, word));
 
 
                 var hintSpan = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("furigana"));
                 if (hintSpan != null)
                 {
                     var hint = hintSpan.InnerText.Trim();
-                    Console.WriteLine(hint);
                     japanNoteCard.SentenceNoteCard.Hint = hint;
                 }
 
 
-
+                
 
 
 
                 var isCommon = wordDiv.SelectNodes(".//span").Any(node =>
                 node.GetClasses().Contains("concept_light-common")
                 && node.GetClasses().Contains("success"));
-                Console.WriteLine(isCommon);
                 japanNoteCard.IsCommonWord = isCommon;
 
 
@@ -161,11 +180,9 @@ namespace WebScraper.ParseHTML
                 {
                     int result = -1;
                     //jlptLevel = jlptLevel.Trim();
-                    Console.WriteLine(jlptLevel);
                     Int32.TryParse(jlptLevel.Replace("JLPT N", ""), out result);
                     if (result != -1)
                     {
-                        Console.WriteLine($"jltp - {result}");
                         japanNoteCard.JLPTLevel = result;
                     }
                 }
@@ -180,13 +197,30 @@ namespace WebScraper.ParseHTML
                     }
 
                     var allDefineInOneString = String.Join(" -||- ", strings);
-                    Console.WriteLine(allDefineInOneString);
                     japanNoteCard.SentenceNoteCard.ItemAnswer = allDefineInOneString;
                 }
 
                 japaneseWordNoteCards.Add(japanNoteCard);
             }
             return japaneseWordNoteCards;
+        }
+
+        private static ChapterNoteCardSentenceNoteCard PageAndOrderNumber(int pageNumber, string kanji, string word)
+        {
+            count++;
+            return new ChapterNoteCardSentenceNoteCard { ChapterNoteCardTopicName = kanji, SentenceNoteCardItemQuestion = word, ExtraJishoInfo = new ExtraJishoInfoOnBridge { PageNumber = pageNumber, Order = count } };
+            
+        }
+        private static int GetPageNumberFromURL(string url)
+        {
+            int pageNumber;
+            Regex pageRegex = new Regex(@"page=[\d]+");
+            var what = pageRegex.Match(url).Value.Replace("page=", "").Trim();
+            if (!(Int32.TryParse(what, out pageNumber)))
+            {
+                pageNumber = 1;
+            }
+            return pageNumber;
         }
     }
 }

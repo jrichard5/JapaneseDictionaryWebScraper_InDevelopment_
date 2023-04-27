@@ -11,5 +11,7 @@ namespace DataLayer.IRepos
     public interface IChapterNoteCardRepo : IGenericRepo<ChapterNoteCard>
     {
         Task<ChapterNoteCard> GetChapterNoteCardByTopicName (string topicName);
+        Task<int> GetLastItemByTopicName(string topicName);
+
     }
 }

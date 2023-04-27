@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DataLayer.Repositories
 {
+    //Is the repository pattern suppose to be DbSets >.> monkaS i forgot
     public class GenericRepo<T> : IGenericRepo<T> where T : class
     {
         protected readonly KanjiDbContext _dbContext;

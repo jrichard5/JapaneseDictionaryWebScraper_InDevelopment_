@@ -11,6 +11,7 @@ namespace DataLayer.Repositories
 {
     public class CategoryRepo : GenericRepo<Category>, ICategoryRepo
     {
+        //Is the repository pattern suppose to be DbSets >.> monkaS i forgot
         public CategoryRepo(KanjiDbContext context) : base(context)
         {
         }
