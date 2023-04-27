@@ -13,6 +13,7 @@ This is probably as much as I'm going to do besides cleaning it up a bit more.  
 
 Bugs:  
 * If I do the same page twice then save to database, get entity already tracked error
+* The error message still shows when I try to add the same kanji twice.
 
 TODOs:
 1. fix bug (possibly by calling unique on the list)
