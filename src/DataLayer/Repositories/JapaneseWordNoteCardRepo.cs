@@ -46,7 +46,6 @@ namespace DataLayer.Repositories
 
             foreach (var card in cards)
             {
-                Console.WriteLine("hi");
                 _dbContext.JapaneseWordNoteCards.Add(card);
             }
             await _dbContext.SaveChangesAsync();

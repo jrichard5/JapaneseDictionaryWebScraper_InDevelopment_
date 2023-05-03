@@ -14,9 +14,9 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace WebScraper.ParseHTML
 {
-    public static class ParseWordsFromFile
+    public class ParseWordsFromFile
     {
-        public async static Task AddWordsToDatabase(IHost host, string url)
+        public async Task AddWordsToDatabase(IHost host, string url)
         {
             using (var scope = host.Services.CreateScope())
             {
@@ -30,73 +30,116 @@ namespace WebScraper.ParseHTML
         }
 
 
-        private static int count = 0;
-        public async static Task<List<JapaneseWordNoteCard>> GetJapaneseWordNoteCardFromFile(IChapterNoteCardRepo chapterRepository, string url)
+        private int count = 0;
+        public async Task<List<JapaneseWordNoteCard>> GetJapaneseWordNoteCardFromFile(IChapterNoteCardRepo chapterRepository, string url)
         {
-            var pageNumber = GetPageNumberFromURL(url);
+            
             List<JapaneseWordNoteCard> notecards = new List<JapaneseWordNoteCard>();
 
-            string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\人 - Jisho.org.htm";
-            string pathToTestFile2 = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\人 #words - Jisho.org.htm";
+            string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\一 - Jisho.org.htm";
+            string pathToTestFile2 = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\一 - Jisho.org.htm";
+
+            string currentUrl = pathToTestFile;
+            var pageNumber = GetPageNumberFromURL(currentUrl);
+
+
+            Console.WriteLine("waiting 10 secs before calling" + currentUrl);
+            await Task.Delay(10000);
             var doc = new HtmlDocument();
-            doc.Load(pathToTestFile);
+            doc.Load(currentUrl);
 
-            var mainResults = doc.GetElementbyId("main_results");
             var kanjiDiv = doc.GetElementbyId("secondary");
-
             var kanjiFromPage = GetKanjiFromPage(kanjiDiv);
-            var kanjiNoteCard = await chapterRepository.GetChapterNoteCardByTopicName(kanjiFromPage);
 
+            //I wanted to call the first one in the while loop, but the kanji part means I made two calls to the first page which is not good.
+
+            var kanjiNoteCard = await chapterRepository.GetChapterNoteCardByTopicName(kanjiFromPage);
             count = await chapterRepository.GetLastItemByTopicName(kanjiFromPage);
 
-            //AddRange will change the list that called it
-            notecards.AddRange(GetAllInfo(mainResults, kanjiNoteCard, pageNumber));
 
-            var moreWordsNode = mainResults.SelectNodes(".//a").First(node => node.GetClasses().Contains("more"));
-            var moreWordsLink = "";
-            if (moreWordsNode != null)
+
+            var nextUrl = AddWordUsingDoc(doc, notecards, kanjiNoteCard, pageNumber);
+
+            //var mainResults = doc.GetElementbyId("main_results");
+            //notecards.AddRange(GetAllInfo(mainResults, kanjiNoteCard, pageNumber));
+            //var moreWordsNode = mainResults.SelectNodes(".//a").First(node => node.GetClasses().Contains("more"));
+            //currentUrl = "";
+            if (nextUrl != "")
             {
-                moreWordsLink = moreWordsNode.GetAttributeValue("href", "");
+                //currentUrl = moreWordsNode.GetAttributeValue("href", "");
+                //TODO: This is here for test purposes (not making calls to jisho until tested);
+                nextUrl = pathToTestFile2;
+                if (currentUrl != nextUrl)
+                {
+                    currentUrl = nextUrl;
+                }
+                else
+                {
+                    currentUrl = "";
+                }
             }
-            
+
+
             //Only call 5 pages max
-            const int LINK_LIMIT = 2;
+            const int LINK_LIMIT = 5;
             int currentLinkCount = 1;
-            while (moreWordsLink != "" && currentLinkCount < LINK_LIMIT)
+            while (currentUrl != "" && currentLinkCount < LINK_LIMIT)
             {
                 pageNumber++;
+                Console.WriteLine("waiting 10 secs before calling" + currentUrl);
+                await Task.Delay(10000);
 
-                //Calling the webpage (not yet)
-                Console.WriteLine("waiting 5 secs before calling" + moreWordsLink);
-                await Task.Delay(2000);
-                var moreDoc = new HtmlDocument();
-                moreDoc.Load(pathToTestFile2);
-                var moreMainResults = moreDoc.GetElementbyId("main_results");
-                notecards.AddRange(GetAllInfo(moreMainResults, kanjiNoteCard, pageNumber));
+                doc = new HtmlDocument();
+                doc.Load(currentUrl);
 
-                Console.WriteLine("waiting 2 secs after calling" + moreWordsLink);
-                await Task.Delay(1000);
-                moreWordsNode = mainResults.SelectNodes(".//a").First(node => node.GetClasses().Contains("more"));
-                moreWordsLink = "";
-                if (moreWordsNode != null)
+                nextUrl = AddWordUsingDoc(doc, notecards, kanjiNoteCard, pageNumber);
+                //AddRange will change the list that called it
+
+                //Checks if there is an anchor tag to the next page.
+                if (nextUrl != "")
                 {
-                    moreWordsLink = moreWordsNode.GetAttributeValue("href", "");
+                    //currentUrl = moreWordsNode.GetAttributeValue("href", "");
+                    //TODO: This is here for test purposes (not making calls to jisho until tested);
+                    nextUrl = pathToTestFile2;
+                    if (currentUrl != nextUrl)
+                    {
+                        currentUrl = nextUrl;
+                        pageNumber++;
+                    }
+                    else {
+                        Console.WriteLine("Same page twice, stopping loop");
+                        break;
+                    }
                 }
-                Console.WriteLine("Will now call" + moreWordsLink);
-                moreWordsLink = "";
-                //Wait time between each call
-                await Task.Delay(1000);
                 //ADD CURRENT COUNT TO BREAK IT OUT OF LIMIT
                 currentLinkCount++;
             }
-
-            //if it has a link, need to do all this again on same page
 
             return notecards;
 
         }
 
-        private static string GetKanjiFromPage(HtmlNode startDiv)
+        /// <summary>
+        /// Takes in an HTML Doc.  adds the words to the List.  
+        /// </summary>
+        /// <returns>Returns the url if there is a link to other page or "" if there is not another page</returns>
+        private string AddWordUsingDoc(HtmlDocument doc, List<JapaneseWordNoteCard> noteCards, ChapterNoteCard kanji, int pageNumber)
+        {
+            var mainResults = doc.GetElementbyId("main_results");
+            noteCards.AddRange(GetAllInfo(mainResults, kanji, pageNumber));
+            var moreWordsNode = mainResults.SelectNodes(".//a").First(node => node.GetClasses().Contains("more"));
+            if (moreWordsNode != null)
+            {
+                var nextUrl = moreWordsNode.GetAttributeValue("href", "");
+                return nextUrl;
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        private string GetKanjiFromPage(HtmlNode startDiv)
         {
             const int NUMBER_OF_KANJI_LOOK_FOR = 1;
 
@@ -120,7 +163,7 @@ namespace WebScraper.ParseHTML
             }
         }
 
-        private static List<JapaneseWordNoteCard> GetAllInfo(HtmlNode startDiv, ChapterNoteCard kanji, int pageNumber)
+        private List<JapaneseWordNoteCard> GetAllInfo(HtmlNode startDiv, ChapterNoteCard kanji, int pageNumber)
         {
             List<JapaneseWordNoteCard> japaneseWordNoteCards = new List<JapaneseWordNoteCard>();
 
@@ -134,70 +177,42 @@ namespace WebScraper.ParseHTML
             );
             foreach (var wordDiv in wordDivs)
             {
-                var japanNoteCard = new JapaneseWordNoteCard();
-                japanNoteCard.SentenceNoteCard = new SentenceNoteCard();
-                japanNoteCard.SentenceNoteCard.ChapterSentences = new List<ChapterNoteCardSentenceNoteCard>();
-                japanNoteCard.SentenceNoteCard.Chapters = new List<ChapterNoteCard>
-                {
-                    kanji
-                };
+                var japanNoteCard = new JapaneseWordNoteCard(kanji);
+                //Made a constuctor to do below code.  Hopefully doesn't mess up ef.
 
-                var word = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("text")).InnerText.Trim();
-                //The website I parse had words that didn't contain this kanji >.>
-                if (!word.Contains(kanji.TopicName))
+                //japanNoteCard.SentenceNoteCard = new SentenceNoteCard();
+                //japanNoteCard.SentenceNoteCard.ChapterSentences = new List<ChapterNoteCardSentenceNoteCard>();
+                //japanNoteCard.SentenceNoteCard.Chapters = new List<ChapterNoteCard>
+                //{
+                //    kanji
+                //};
+
+                var wordInfo = new JapanWordInfoFromDiv(wordDiv);
+
+                if (wordInfo.Word != null && wordInfo.Word.Contains(japanNoteCard.SentenceNoteCard.Chapters.First().TopicName))
+                {
+                    japanNoteCard.SentenceNoteCard.ItemQuestion = wordInfo.Word;
+                }
+                else
                 {
                     continue;
                 }
-                japanNoteCard.SentenceNoteCard.ItemQuestion = word;
-
-                japanNoteCard.SentenceNoteCard.ChapterSentences.Add(PageAndOrderNumber(pageNumber, kanji.TopicName, word));
-
-
-                var hintSpan = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("furigana"));
-                if (hintSpan != null)
+                japanNoteCard.SentenceNoteCard.ChapterSentences.Add(PageAndOrderNumber(pageNumber, kanji.TopicName, japanNoteCard.SentenceNoteCard.ItemQuestion));
+                if (wordInfo.Hint != null)
                 {
-                    var hint = hintSpan.InnerText.Trim();
-                    japanNoteCard.SentenceNoteCard.Hint = hint;
+                    japanNoteCard.SentenceNoteCard.Hint = wordInfo.Hint;
                 }
 
+                japanNoteCard.IsCommonWord = wordInfo.IsCommon;
 
-                
-
-
-
-                var isCommon = wordDiv.SelectNodes(".//span").Any(node =>
-                node.GetClasses().Contains("concept_light-common")
-                && node.GetClasses().Contains("success"));
-                japanNoteCard.IsCommonWord = isCommon;
-
-
-                var regExpression = new Regex(@"JLPT");
-                var jlptLevel = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("concept_light-tag")
-                && node.GetClasses().Contains("label")
-                && regExpression.IsMatch(node.InnerText)
-                ).InnerText;
-                if (jlptLevel != null)
+                if (wordInfo.JlptLevel != null)
                 {
-                    int result = -1;
-                    //jlptLevel = jlptLevel.Trim();
-                    Int32.TryParse(jlptLevel.Replace("JLPT N", ""), out result);
-                    if (result != -1)
-                    {
-                        japanNoteCard.JLPTLevel = result;
-                    }
+                    japanNoteCard.JLPTLevel = wordInfo.JlptLevel;
                 }
 
-                var definationDivs = wordDiv.SelectNodes(".//span").Where(spans => spans.GetClasses().Contains("meaning-meaning"));
-                if (definationDivs.Any())
+                if(wordInfo.Defination != null)
                 {
-                    var strings = new List<string>();
-                    foreach (var define in definationDivs)
-                    {
-                        strings.Add(define.InnerText);
-                    }
-
-                    var allDefineInOneString = String.Join(" -||- ", strings);
-                    japanNoteCard.SentenceNoteCard.ItemAnswer = allDefineInOneString;
+                    japanNoteCard.SentenceNoteCard.ItemAnswer = wordInfo.Defination;
                 }
 
                 japaneseWordNoteCards.Add(japanNoteCard);
@@ -205,13 +220,13 @@ namespace WebScraper.ParseHTML
             return japaneseWordNoteCards;
         }
 
-        private static ChapterNoteCardSentenceNoteCard PageAndOrderNumber(int pageNumber, string kanji, string word)
+        private ChapterNoteCardSentenceNoteCard PageAndOrderNumber(int pageNumber, string kanji, string word)
         {
             count++;
             return new ChapterNoteCardSentenceNoteCard { ChapterNoteCardTopicName = kanji, SentenceNoteCardItemQuestion = word, ExtraJishoInfo = new ExtraJishoInfoOnBridge { PageNumber = pageNumber, Order = count } };
             
         }
-        private static int GetPageNumberFromURL(string url)
+        private int GetPageNumberFromURL(string url)
         {
             int pageNumber;
             Regex pageRegex = new Regex(@"page=[\d]+");

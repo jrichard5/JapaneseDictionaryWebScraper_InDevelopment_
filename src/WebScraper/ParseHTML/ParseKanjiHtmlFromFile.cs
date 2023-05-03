@@ -27,9 +27,10 @@ namespace WebScraper.ParseHTML
 
                 await Task.Delay(1000);
                 await kanjiRepo.AddButSkipUniqueException(kanjinotecard);
-                Console.WriteLine("calling url" + url);
+                Console.WriteLine("calling url but should get changed " + url);
                 await Task.Delay(1000);
-                await ParseWordsFromFile.AddWordsToDatabase(host, url);
+                ParseWordsFromFile parser = new ParseWordsFromFile();
+                await parser.AddWordsToDatabase(host, url);
             }
         }
 
@@ -42,7 +43,7 @@ namespace WebScraper.ParseHTML
 
             List<KanjiReading> kanjiReadings = new List<KanjiReading>();
 
-            string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\人 #kanji - Jisho.org.htm";
+            string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\一 #kanji - Jisho.org.htm";
 
             var doc = new HtmlDocument();
             doc.Load(pathToTestFile);
