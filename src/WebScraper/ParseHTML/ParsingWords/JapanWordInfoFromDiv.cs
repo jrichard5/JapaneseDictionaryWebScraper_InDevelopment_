@@ -1,11 +1,5 @@
-﻿using DataLayer.Entities;
-using HtmlAgilityPack;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using HtmlAgilityPack;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace WebScraper.ParseHTML.ParsingWords
 {
@@ -34,20 +28,11 @@ namespace WebScraper.ParseHTML.ParsingWords
         /// <returns>bool</returns>
         private void TrySetTopicFromDiv(HtmlNode wordDiv)
         {
+            //This class's method is not responsible for if word is null
             var wordFromDiv = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("text")).InnerText.Trim();
             Word = wordFromDiv;
-            //The website I parse had words that didn't contain this kanji >.>
-            //if (word.Contains(japanNoteCard.SentenceNoteCard.Chapters.First().TopicName))
-            //{
-            //    japanNoteCard.SentenceNoteCard.ItemQuestion = word;
-            //}
-
         }
-        /*Problem :  <span class="kanji-2-up kanji">おな</span><span></span><span class="kanji-2-up kanji">どし</span> and 同<span>い</span>年
- *  Cannot associate span with kanji because sometimes unqiue readings:
- *  <span class="kanji-4-up kanji">おととし</span>  and <span class="text">一昨年</span>
- * 
- */
+        
         private void SetHintFromDiv(HtmlNode wordDiv)
         {
             var hintSpan = wordDiv.SelectNodes(".//span").FirstOrDefault(node => node.GetClasses().Contains("furigana"), null);
@@ -88,9 +73,8 @@ namespace WebScraper.ParseHTML.ParsingWords
                         listOfStrings.Add($"[{hintChild.InnerText}]".Trim());
                     }
                 }
-                //var hint = hintSpan.InnerText.Trim();
+                
                 Hint = string.Join(" ", listOfStrings);
-                //japanNoteCard.SentenceNoteCard.Hint = String.Join(" ", listOfStrings);
             }
         }
         private void SetCommonFromDiv(HtmlNode wordDiv)
@@ -98,7 +82,7 @@ namespace WebScraper.ParseHTML.ParsingWords
             var isCommonFromNode = wordDiv.SelectNodes(".//span").Any(node =>
                 node.GetClasses().Contains("concept_light-common")
                 && node.GetClasses().Contains("success"));
-            //japanNoteCard.IsCommonWord = isCommon;
+            
             IsCommon = isCommonFromNode;
         }
 
@@ -116,11 +100,11 @@ namespace WebScraper.ParseHTML.ParsingWords
                 int.TryParse(jlptLevelFromDiv.Replace("JLPT N", ""), out result);
                 if (result != -1)
                 {
-                    //japanNoteCard.JLPTLevel = result;
                     JlptLevel = result;
                 }
             }
         }
+
         private void SetDefinationsFromDiv(HtmlNode wordDiv)
         {
             var definationDivs = wordDiv.SelectNodes(".//span").Where(spans => spans.GetClasses().Contains("meaning-meaning"));
@@ -133,9 +117,32 @@ namespace WebScraper.ParseHTML.ParsingWords
                 }
 
                 var allDefineInOneString = string.Join(" -||- ", strings);
-                //japanNoteCard.SentenceNoteCard.ItemAnswer = allDefineInOneString;
+                
                 Defination = allDefineInOneString;
             }
         }
     }
 }
+
+
+//Old Comments
+//Method not responible for word being null.
+//The website I parse had words that didn't contain this kanji >.>
+//if (word.Contains(japanNoteCard.SentenceNoteCard.Chapters.First().TopicName))
+//{
+//    japanNoteCard.SentenceNoteCard.ItemQuestion = word;
+//}
+
+//Hint Problem
+/*Problem :  <span class="kanji-2-up kanji">おな</span><span></span><span class="kanji-2-up kanji">どし</span> and 同<span>い</span>年
+ *  Cannot associate span with kanji because sometimes unqiue readings:
+ *  <span class="kanji-4-up kanji">おととし</span>  and <span class="text">一昨年</span>
+ * 
+ */
+
+//Commented out code (needed to remove, but still needed it as reference >.>).
+//var hint = hintSpan.InnerText.Trim();
+//japanNoteCard.SentenceNoteCard.Hint = String.Join(" ", listOfStrings);
+//japanNoteCard.IsCommonWord = isCommon;
+//japanNoteCard.JLPTLevel = result;
+//japanNoteCard.SentenceNoteCard.ItemAnswer = allDefineInOneString;

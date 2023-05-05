@@ -11,8 +11,5 @@
         public int MemorizationLevel { get; set; }
         public bool IsUserWantsToFocusOn { get; set; }
         public DateTime LastTimeAccess { get; set; }
-
-        //Ok there is like 1300 words that contain the kanji 日
-
     }
 }

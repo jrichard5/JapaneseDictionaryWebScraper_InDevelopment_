@@ -1,7 +1,5 @@
-﻿using DataLayer.CSV;
-using DataLayer.Entities;
+﻿using DataLayer.Entities;
 using DataLayer.IRepos;
-using DataLayer.Repositories;
 using HtmlAgilityPack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,11 +22,9 @@ namespace WebScraper.ParseHTML
                 var kanjinotecard = testFilePathTuple.Item1;
                 var url = testFilePathTuple.Item2;
 
-
-                await Task.Delay(1000);
                 await kanjiRepo.AddButSkipUniqueException(kanjinotecard);
                 Console.WriteLine("calling url but should get changed " + url);
-                await Task.Delay(1000);
+                await Task.Delay(5000);
                 ParseWordsFromFile parser = new ParseWordsFromFile();
                 await parser.AddWordsToDatabase(host, url);
             }
@@ -39,7 +35,6 @@ namespace WebScraper.ParseHTML
             KanjiNoteCard testKanjiNoteCard = new KanjiNoteCard();
             testKanjiNoteCard.ChapterNoteCard = new ChapterNoteCard();
             testKanjiNoteCard.ChapterNoteCard.Category = await cateRepo.GetFirstCategoryByName("Japanese Vocab");
-            Console.WriteLine(testKanjiNoteCard.ChapterNoteCard.Category.Id + " category number --------");
 
             List<KanjiReading> kanjiReadings = new List<KanjiReading>();
 
@@ -47,10 +42,6 @@ namespace WebScraper.ParseHTML
 
             var doc = new HtmlDocument();
             doc.Load(pathToTestFile);
-
-            ////How to print out entire HTML
-            //var node = doc.Text;
-            //Console.WriteLine(node);
 
             var resultsDiv = doc.GetElementbyId("result_area");
             if (resultsDiv == null)
@@ -60,7 +51,6 @@ namespace WebScraper.ParseHTML
 
             var kanji = GetKanji(resultsDiv);
             testKanjiNoteCard.ChapterNoteCard.TopicName = kanji;
-
 
             //TODO: determine if I should just make all these throw exceptions, and use one try/catch block
             //If one fails, I don't really want to continue
@@ -85,8 +75,6 @@ namespace WebScraper.ParseHTML
             return (testKanjiNoteCard, url);
         }
 
-
-
         private static string GetNextUrl(HtmlNode startDiv)
         {
             var urlLi = startDiv.SelectNodes(".//a").First(node => node.InnerText.StartsWith("Words containing")).GetAttributeValue("href", "");
@@ -105,24 +93,12 @@ namespace WebScraper.ParseHTML
 
             foreach (var kunTag in kunTags)
             {
-                Console.WriteLine(kunTag.InnerText);
                 readings.Add(new KanjiReading { KanjiNoteCardTopicName = kanji, TypeOfReading = "kun", Reading = kunTag.InnerText });
             }
             foreach (var onTag in onTags)
             {
-                Console.WriteLine(onTag.InnerText);
                 readings.Add(new KanjiReading { KanjiNoteCardTopicName = kanji, TypeOfReading = "on", Reading = onTag.InnerText });
             }
-            //TODO:  Remove this, as this was test to make sure right words
-            //string localdirectory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb";
-            //using StreamWriter outputFile = new StreamWriter(Path.Combine(localdirectory, "hi.txt"));
-            //{
-            //    foreach (KanjiReading kanjiReading in readings)
-            //    {
-            //        outputFile.WriteLine(kanjiReading.TypeOfReading + "  " + kanjiReading.Reading);
-            //        Console.WriteLine("writing line to file");
-            //    }
-            //}
         }
         private static void GetNewspaperRank(HtmlNode startDiv, KanjiNoteCard notecard)
         {
@@ -131,17 +107,15 @@ namespace WebScraper.ParseHTML
             int result = -1;
             if (Int32.TryParse(newspaperRank, out result))
             {
-                Console.WriteLine($"newspaper rank is {result}");
                 notecard.NewspaperRank = result;
             }
             else
             {
                 Console.WriteLine("This really should be debugbut oh well");
             }
-            
         }
 
-        //COPYRIGHT question jlpt????
+        //COPYRIGHTQUESTOIN: Is Jlpt copyrighted?
         private static void GetJLPTLevel(HtmlNode startDiv, KanjiNoteCard notecard)
         {
             var jlptDiv = startDiv.Descendants().First(desc => desc.GetClasses().Contains("jlpt"));
@@ -149,20 +123,16 @@ namespace WebScraper.ParseHTML
             var result = -1;
             if (Int32.TryParse(jlptNumber, out result))
             {
-                Console.WriteLine($"jlpt --- {result}");
                 notecard.JLPTLevel = result;
             }
             else
             {
                 Console.WriteLine("Debug.WriteLine(jlpterror)");
             }
-
         }
         private static string GetKanji(HtmlNode startDiv)
         {
-            //Need the '.' for the xpath to search the "context node"
             string kanji = startDiv.SelectSingleNode(".//h1").InnerHtml;
-            Console.WriteLine(kanji);
             return kanji;
         }
 
@@ -186,13 +156,12 @@ namespace WebScraper.ParseHTML
         private static void GetGrade(HtmlNode startDiv, KanjiNoteCard notecard)
         {
             var gradeDiv = startDiv.Descendants().First(desc => desc.GetClasses().Contains("grade"));
-            //Will return grade 1
+            //Will return "grade 1"
             var grade = gradeDiv.SelectSingleNode(".//strong").InnerText.Replace("grade", "").Trim();
 
             int result = -1;
             if (Int32.TryParse(grade, out result))
             {
-                Console.WriteLine($"Debug.WriteLine(grade is {grade})");
                 notecard.ChapterNoteCard.GradeLevel = result;
             }
             else
@@ -202,3 +171,22 @@ namespace WebScraper.ParseHTML
         }
     }
 }
+
+
+//Old comments that I used to help learn HtmlAgilityPack
+//How to print out entire HTML
+//var node = doc.Text;
+//Console.WriteLine(node);
+
+//TODO:  Remove this, as this was test to make sure right words
+//string localdirectory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb";
+//using StreamWriter outputFile = new StreamWriter(Path.Combine(localdirectory, "hi.txt"));
+//{
+//    foreach (KanjiReading kanjiReading in readings)
+//    {
+//        outputFile.WriteLine(kanjiReading.TypeOfReading + "  " + kanjiReading.Reading);
+//        Console.WriteLine("writing line to file");
+//    }
+//}
+
+//Need the '.' for the xpath to search the "context node"

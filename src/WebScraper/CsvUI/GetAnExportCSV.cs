@@ -1,5 +1,4 @@
-﻿using DataLayer;
-using DataLayer.CSV;
+﻿using DataLayer.CSV;
 using DataLayer.Entities;
 using DataLayer.IRepos;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,8 +10,6 @@ namespace WebScraper.CsvUI
     {
         public async static void ExportCSV(IHost host)
         {
-            //Dependency Injection
-            //https://stackoverflow.com/questions/55983541/understanding-net-core-dependency-injection-in-a-console-app
             using (var scope = host.Services.CreateScope())
             {
                 var serviceProvider = scope.ServiceProvider;
@@ -23,3 +20,7 @@ namespace WebScraper.CsvUI
         }
     }
 }
+
+//Old Comments
+//Dependency Injection
+//https://stackoverflow.com/questions/55983541/understanding-net-core-dependency-injection-in-a-console-app

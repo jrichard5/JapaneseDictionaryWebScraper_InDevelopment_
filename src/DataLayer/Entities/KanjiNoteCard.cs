@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DataLayer.Entities
+﻿namespace DataLayer.Entities
 {
     public class KanjiNoteCard
     {
@@ -14,6 +8,4 @@ namespace DataLayer.Entities
         public int JLPTLevel { get; set; }
         public List<KanjiReading> KanjiReadings { get; set; }
     }
-
-    
 }

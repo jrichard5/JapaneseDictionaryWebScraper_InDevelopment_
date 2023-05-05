@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace DataLayer.Entities
+﻿namespace DataLayer.Entities
 {
     public class ChapterNoteCard
     {
@@ -13,6 +10,5 @@ namespace DataLayer.Entities
         public Category Category { get; set; }
         public List<SentenceNoteCard>? Sentences { get; set; }
         public List<ChapterNoteCardSentenceNoteCard>? ChapterSentences { get; set; }
-
     }
 }
