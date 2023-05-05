@@ -1,10 +1,5 @@
 ﻿using DataLayer.Entities;
 using HtmlAgilityPack;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WebScraper.ParseHTML.ParsingWords;
 
 namespace xUnitTests.ParseWordsTests
@@ -14,7 +9,6 @@ namespace xUnitTests.ParseWordsTests
         [Fact]
         public async Task InfoMapper_HintNull_Success()
         {
-
             var cncKanji = new ChapterNoteCard
             {
                 TopicName = "百"
@@ -94,8 +88,6 @@ namespace xUnitTests.ParseWordsTests
             var mapper = new InfoMapper();
             var notecard = mapper.ToJapanNoteCard(info, cncKanji);
 
-
-            
             Assert.Equal("百", notecard.SentenceNoteCard.ItemQuestion);
             Assert.NotNull(notecard.SentenceNoteCard.Hint);
             Assert.Equal("[ひゃく]", notecard.SentenceNoteCard.Hint);

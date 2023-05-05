@@ -36,8 +36,8 @@ namespace WebScraper.ParseHTML
             string currentUrl = pathToTestFile;
             var pageNumber = GetPageNumberFromURL(currentUrl);
 
-            Console.WriteLine("waiting 10 secs before calling" + currentUrl);
-            await Task.Delay(10000);
+            Console.WriteLine("waiting 5 secs before calling " + currentUrl);
+            await Task.Delay(5000);
             var doc = new HtmlDocument();
             doc.Load(currentUrl);
 
@@ -49,6 +49,9 @@ namespace WebScraper.ParseHTML
             var kanjiFromPage = GetKanjiFromPage(kanjiDiv);
 
             //I wanted to call the first one in the while loop, but the kanji part means I made two calls to the first page.
+            //TODO: Maybe I can do
+            //load, get kanji.  while loop
+            //get words, get next url, load html at the end.
             var kanjiNoteCard = await chapterRepository.GetChapterNoteCardByTopicName(kanjiFromPage);
             count = await chapterRepository.GetLastItemByTopicName(kanjiFromPage);
 
@@ -56,7 +59,6 @@ namespace WebScraper.ParseHTML
 
             //var mainResults = doc.GetElementbyId("main_results");
             //var moreWordsNode = mainResults.SelectNodes(".//a").First(node => node.GetClasses().Contains("more"));
-            //currentUrl = "";
             if (nextUrl != "")
             {
                 //currentUrl = moreWordsNode.GetAttributeValue("href", "");
@@ -72,7 +74,6 @@ namespace WebScraper.ParseHTML
                 }
             }
 
-
             //Only call 5 pages max
             const int LINK_LIMIT = 5;
             int currentLinkCount = 1;
@@ -86,7 +87,6 @@ namespace WebScraper.ParseHTML
                 doc.Load(currentUrl);
 
                 nextUrl = AddWordUsingDoc(doc, notecards, kanjiNoteCard, pageNumber);
-                //AddRange will change the list that called it
 
                 //Checks if there is an anchor tag to the next page.
                 if (nextUrl != "")
@@ -109,7 +109,6 @@ namespace WebScraper.ParseHTML
             }
 
             return notecards;
-
         }
 
         /// <summary>
@@ -161,17 +160,17 @@ namespace WebScraper.ParseHTML
             List<JapaneseWordNoteCard> japaneseWordNoteCards = new List<JapaneseWordNoteCard>();
 
             var primaryDiv = startDiv.Descendants().First(desc => desc.Id == "primary");
-
             var wordDivs = primaryDiv.Descendants().Where(desc =>
             {
                 var classes = desc.GetClasses();
                 return classes.Contains("concept_light") && classes.Contains("clearfix");
-            }
-            );
+            });
+
             if (!wordDivs.Any())
             {
                 throw new ArgumentException("No words, probably a bad file");
             }
+
             foreach (var wordDiv in wordDivs)
             {
                 var wordInfo = new JapanWordInfoFromDiv(wordDiv);
@@ -191,7 +190,6 @@ namespace WebScraper.ParseHTML
         {
             count++;
             return new ChapterNoteCardSentenceNoteCard { ChapterNoteCardTopicName = kanji, SentenceNoteCardItemQuestion = word, ExtraJishoInfo = new ExtraJishoInfoOnBridge { PageNumber = pageNumber, Order = count } };
-            
         }
         private int GetPageNumberFromURL(string url)
         {
@@ -206,3 +204,7 @@ namespace WebScraper.ParseHTML
         }
     }
 }
+
+
+//Old Comments
+//AddRange will change the list that called it
