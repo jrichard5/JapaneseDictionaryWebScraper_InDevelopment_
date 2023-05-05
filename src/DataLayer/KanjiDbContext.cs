@@ -6,18 +6,8 @@ namespace DataLayer
 {
     public class KanjiDbContext : DbContext
     {
-        //private string DbPath { get; }
-        //Can't have a default constructor since I start using DI.  https://stackoverflow.com/questions/44574358/ef-core-no-database-provider-has-been-configured-for-this-dbcontext
         public KanjiDbContext()
         {
-            //    /*
-            //    var folder = Environment.SpecialFolder.LocalApplicationData;
-            //    var path = Environment.GetFolderPath(folder);
-            //    var newAppDataFolder = Path.Join(path, @"zzNihongoDb\");
-            //    Directory.CreateDirectory(newAppDataFolder);
-            //    DbPath = System.IO.Path.Combine(newAppDataFolder, "kdb.db");
-            //   // 
-            //    */
         }
 
         public KanjiDbContext(DbContextOptions<KanjiDbContext> options) : base(options)
@@ -27,9 +17,8 @@ namespace DataLayer
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            //Maybe can get rid of with static IHostBuilder CreateHostBuilder(string[] args) https://stackoverflow.com/questions/59796411/unable-to-create-an-object-of-type-applicationdbcontext-for-the-different-pat.https://learn.microsoft.com/en-us/ef/core/cli/dbcontext-creation?tabs=dotnet-core-cli  
+            
             Debug.WriteLine("using onconfig dbcontext");
-            Console.WriteLine("using onconfig dbcontext, want for migrations.  Removed connection String from the AddDbContext connection string");
 
             string DbPath;
             var folder = Environment.SpecialFolder.LocalApplicationData;
@@ -39,12 +28,7 @@ namespace DataLayer
             DbPath = System.IO.Path.Combine(newAppDataFolder, "kdb.db");
 
             optionsBuilder.UseSqlite($"Data Source={DbPath}");
-            //TODO: do I need this??
-            //base.OnConfiguring(optionsBuilder);
         }
-
-        //https://learn.microsoft.com/en-us/ef/core/get-started/overview/first-app?tabs=netcore-cli --uses =>
-        //=> optionsBuilder.UseSqlite("Data Source=KanjiDatabasePrototype");
 
         public override void Dispose()
         {
@@ -64,25 +48,20 @@ namespace DataLayer
                 .HasMany(k => k.Sentences)
                 .WithMany(s => s.Chapters)
                 .UsingEntity<ChapterNoteCardSentenceNoteCard>();
-
             modelBuilder.Entity<KanjiNoteCard>()
                 .HasOne(knc => knc.ChapterNoteCard)
                 .WithOne()
                 .HasForeignKey<KanjiNoteCard>(knc => knc.TopicName)
                 .IsRequired();
-
             modelBuilder.Entity<JapaneseWordNoteCard>()
                 .HasOne(jwnc => jwnc.SentenceNoteCard)
                 .WithOne()
                 .HasForeignKey<JapaneseWordNoteCard>(jwnc => jwnc.ItemQuestion)
                 .IsRequired();
-
             modelBuilder.Entity<ExtraJishoInfoOnBridge>()
                 .HasOne(extra => extra.ChapterNoteCardSentenceNoteCard)
                 .WithOne(cncsnc => cncsnc.ExtraJishoInfo)
                 .HasForeignKey<ExtraJishoInfoOnBridge>(e => new { e.ChapterNoteCardTopicName, e.SentenceNoteCardItemQuestion });
-
-            //Can't use default value for datetime.now, because when the migration happens, it gets datetime, and then assigns that specfic time as the default value.  So, we use hasdefaultvaluesql.
             modelBuilder.Entity<ChapterNoteCard>()
                 .Property(cnc => cnc.LastTimeAccess).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
@@ -101,17 +80,14 @@ namespace DataLayer
                 new KanjiReading { KanjiNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "び" },
                 new KanjiReading { KanjiNoteCardTopicName = "日", TypeOfReading = "kun", Reading = "か" }
                 );
-
             modelBuilder.Entity<ChapterNoteCardSentenceNoteCard>().HasData(
                 new ChapterNoteCardSentenceNoteCard { ChapterNoteCardTopicName = "毎", SentenceNoteCardItemQuestion = "毎日" },
                 new ChapterNoteCardSentenceNoteCard { ChapterNoteCardTopicName = "日", SentenceNoteCardItemQuestion = "毎日" }
                 );
-
             modelBuilder.Entity<ExtraJishoInfoOnBridge>().HasData(
                     new ExtraJishoInfoOnBridge { Id = 1, ChapterNoteCardTopicName = "毎", SentenceNoteCardItemQuestion = "毎日", PageNumber = 1, Order = 1 },
                     new ExtraJishoInfoOnBridge { Id = 2, ChapterNoteCardTopicName = "日", SentenceNoteCardItemQuestion = "毎日", PageNumber = 1, Order = 1 }
                 );
-
             modelBuilder.Entity<SentenceNoteCard>().HasData(
                 new SentenceNoteCard
                 {
@@ -123,7 +99,6 @@ namespace DataLayer
                     LastTimeAccess = DateTime.Now
                 }
                 );
-
             modelBuilder.Entity<JapaneseWordNoteCard>().HasData(
                 new JapaneseWordNoteCard
                 {
@@ -131,7 +106,6 @@ namespace DataLayer
                     IsCommonWord = true,
                     JLPTLevel = 5
                 });
-            //base.OnModelCreating(modelBuilder);
         }
 
         public virtual DbSet<ChapterNoteCard> Chapters { get; set; }
@@ -144,3 +118,34 @@ namespace DataLayer
         public virtual DbSet<Category> Categories { get; set; }
     }
 }
+
+
+//Old Comments
+
+//private string DbPath { get; }
+//Can't have a default constructor since I start using DI.  https://stackoverflow.com/questions/44574358/ef-core-no-database-provider-has-been-configured-for-this-dbcontext
+//In parameterless constructor(){
+//    /*
+//    var folder = Environment.SpecialFolder.LocalApplicationData;
+//    var path = Environment.GetFolderPath(folder);
+//    var newAppDataFolder = Path.Join(path, @"zzNihongoDb\");
+//    Directory.CreateDirectory(newAppDataFolder);
+//    DbPath = System.IO.Path.Combine(newAppDataFolder, "kdb.db");
+//   // 
+//    */
+//}
+
+//OnConfig(){
+//Maybe can get rid of with static IHostBuilder CreateHostBuilder(string[] args) https://stackoverflow.com/questions/59796411/unable-to-create-an-object-of-type-applicationdbcontext-for-the-different-pat.https://learn.microsoft.com/en-us/ef/core/cli/dbcontext-creation?tabs=dotnet-core-cli  
+//TODO: do I need this??
+//base.OnConfiguring(optionsBuilder);
+//}
+
+////https://learn.microsoft.com/en-us/ef/core/get-started/overview/first-app?tabs=netcore-cli --uses =>
+//=> optionsBuilder.UseSqlite("Data Source=KanjiDatabasePrototype");
+
+//OnModelCreate(){
+//Can't use default value for datetime.now, because when the migration happens, it gets datetime, and then assigns that specfic time as the default value.  So, we use hasdefaultvaluesql.
+//base.OnModelCreating(modelBuilder);
+//}
+
