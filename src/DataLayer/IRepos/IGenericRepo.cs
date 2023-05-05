@@ -6,6 +6,5 @@
         public Task DeleteAsync(T entity);
         public Task<T> FindByIdAsync(int id);
         public Task<List<T>> GetAll();
-
     }
 }

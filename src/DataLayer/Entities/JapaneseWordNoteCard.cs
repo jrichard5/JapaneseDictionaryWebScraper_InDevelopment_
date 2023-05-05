@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DataLayer.Entities
+﻿namespace DataLayer.Entities
 {
     public  class JapaneseWordNoteCard
     {
@@ -15,7 +9,6 @@ namespace DataLayer.Entities
 
         public JapaneseWordNoteCard()
         {
-
         }
         public JapaneseWordNoteCard(ChapterNoteCard chapterNote)
         {
@@ -27,6 +20,4 @@ namespace DataLayer.Entities
             };
         }
     }
-
-    
 }
