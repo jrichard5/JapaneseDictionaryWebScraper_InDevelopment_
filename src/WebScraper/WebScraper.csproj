@@ -25,4 +25,8 @@
     <None Include="C:\Users\Etop\gitStuff\webscraperjisho\JishoWebScraper\src\WebScraper\.editorconfig" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ParseHTML\ParsingKanjiHelperClasses\" />
+  </ItemGroup>
+
 </Project>

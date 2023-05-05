@@ -17,6 +17,9 @@ Bugs:
 
 TODOs:
 1. fix bug (possibly by calling unique on the list)
-2. its kinda of a do...while loop... except it only has the while loop at the end.  I feel like I could set up the setup part inside the loop.
+* ~~furigana does not include hiragana, so gotta fix that.~~
+* there is an issue where I do get __ when it is a unique reading.  but I could probably use that as a symbol it is a unique reading
 3. Figure out the repo Pattern. I don't recall me using context inside the repo....
 4. Unit Tests!!!!!
+5. Be more extensisible.  I may want to add whether a verb in transitive or not (0 - not verb, 1 - verb, but not transitivie, and 2, ver and transitive.)
+** https://www.devonblog.com/software-development/solid-violations-in-the-wild-the-open-closed-principle/
