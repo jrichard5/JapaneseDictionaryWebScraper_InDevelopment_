@@ -1,16 +1,9 @@
 ﻿using DataLayer.Entities;
 using DataLayer.IRepos;
-using DataLayer.Repositories;
 using HtmlAgilityPack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace WebScraper.ParseHTML
 {
@@ -31,9 +24,9 @@ namespace WebScraper.ParseHTML
 
 
         private int count = 0;
+
         public async Task<List<JapaneseWordNoteCard>> GetJapaneseWordNoteCardFromFile(IChapterNoteCardRepo chapterRepository, string url)
         {
-            
             List<JapaneseWordNoteCard> notecards = new List<JapaneseWordNoteCard>();
 
             string pathToTestFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\zzNihongoDb\一 - Jisho.org.htm";
@@ -42,26 +35,25 @@ namespace WebScraper.ParseHTML
             string currentUrl = pathToTestFile;
             var pageNumber = GetPageNumberFromURL(currentUrl);
 
-
             Console.WriteLine("waiting 10 secs before calling" + currentUrl);
             await Task.Delay(10000);
             var doc = new HtmlDocument();
             doc.Load(currentUrl);
 
             var kanjiDiv = doc.GetElementbyId("secondary");
+            if (kanjiDiv == null)
+            {
+                throw new ArgumentException("this div needs to have a secondarydiv");
+            }
             var kanjiFromPage = GetKanjiFromPage(kanjiDiv);
 
-            //I wanted to call the first one in the while loop, but the kanji part means I made two calls to the first page which is not good.
-
+            //I wanted to call the first one in the while loop, but the kanji part means I made two calls to the first page.
             var kanjiNoteCard = await chapterRepository.GetChapterNoteCardByTopicName(kanjiFromPage);
             count = await chapterRepository.GetLastItemByTopicName(kanjiFromPage);
-
-
 
             var nextUrl = AddWordUsingDoc(doc, notecards, kanjiNoteCard, pageNumber);
 
             //var mainResults = doc.GetElementbyId("main_results");
-            //notecards.AddRange(GetAllInfo(mainResults, kanjiNoteCard, pageNumber));
             //var moreWordsNode = mainResults.SelectNodes(".//a").First(node => node.GetClasses().Contains("more"));
             //currentUrl = "";
             if (nextUrl != "")
@@ -175,20 +167,16 @@ namespace WebScraper.ParseHTML
                 return classes.Contains("concept_light") && classes.Contains("clearfix");
             }
             );
+            if (!wordDivs.Any())
+            {
+                throw new ArgumentException("No words, probably a bad file");
+            }
             foreach (var wordDiv in wordDivs)
             {
                 var japanNoteCard = new JapaneseWordNoteCard(kanji);
-                //Made a constuctor to do below code.  Hopefully doesn't mess up ef.
-
-                //japanNoteCard.SentenceNoteCard = new SentenceNoteCard();
-                //japanNoteCard.SentenceNoteCard.ChapterSentences = new List<ChapterNoteCardSentenceNoteCard>();
-                //japanNoteCard.SentenceNoteCard.Chapters = new List<ChapterNoteCard>
-                //{
-                //    kanji
-                //};
-
                 var wordInfo = new JapanWordInfoFromDiv(wordDiv);
 
+                //I probably should create a mapper for this.
                 if (wordInfo.Word != null && wordInfo.Word.Contains(japanNoteCard.SentenceNoteCard.Chapters.First().TopicName))
                 {
                     japanNoteCard.SentenceNoteCard.ItemQuestion = wordInfo.Word;

@@ -53,6 +53,10 @@ namespace WebScraper.ParseHTML
             //Console.WriteLine(node);
 
             var resultsDiv = doc.GetElementbyId("result_area");
+            if (resultsDiv == null)
+            {
+                throw new Exception("No div with result area");
+            }
 
             var kanji = GetKanji(resultsDiv);
             testKanjiNoteCard.ChapterNoteCard.TopicName = kanji;
