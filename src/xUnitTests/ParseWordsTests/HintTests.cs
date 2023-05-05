@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WebScraper.ParseHTML;
+using WebScraper.ParseHTML.ParsingWords;
 
 namespace xUnitTests.ParseWordsTests
 {

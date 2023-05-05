@@ -4,6 +4,7 @@ using HtmlAgilityPack;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Text.RegularExpressions;
+using WebScraper.ParseHTML.ParsingWords;
 
 namespace WebScraper.ParseHTML
 {
@@ -173,37 +174,15 @@ namespace WebScraper.ParseHTML
             }
             foreach (var wordDiv in wordDivs)
             {
-                var japanNoteCard = new JapaneseWordNoteCard(kanji);
                 var wordInfo = new JapanWordInfoFromDiv(wordDiv);
 
-                //I probably should create a mapper for this.
-                if (wordInfo.Word != null && wordInfo.Word.Contains(japanNoteCard.SentenceNoteCard.Chapters.First().TopicName))
+                if (wordInfo != null && wordInfo.Word.Contains(kanji.TopicName))
                 {
-                    japanNoteCard.SentenceNoteCard.ItemQuestion = wordInfo.Word;
-                }
-                else
-                {
-                    continue;
-                }
-                japanNoteCard.SentenceNoteCard.ChapterSentences.Add(PageAndOrderNumber(pageNumber, kanji.TopicName, japanNoteCard.SentenceNoteCard.ItemQuestion));
-                if (wordInfo.Hint != null)
-                {
-                    japanNoteCard.SentenceNoteCard.Hint = wordInfo.Hint;
-                }
-
-                japanNoteCard.IsCommonWord = wordInfo.IsCommon;
-
-                if (wordInfo.JlptLevel != null)
-                {
-                    japanNoteCard.JLPTLevel = wordInfo.JlptLevel;
-                }
-
-                if(wordInfo.Defination != null)
-                {
-                    japanNoteCard.SentenceNoteCard.ItemAnswer = wordInfo.Defination;
-                }
-
-                japaneseWordNoteCards.Add(japanNoteCard);
+                    var mapper = new InfoMapper();
+                    var japanNoteCard = mapper.ToJapanNoteCard(wordInfo, kanji);
+                    japaneseWordNoteCards.Add(japanNoteCard);
+                    japanNoteCard.SentenceNoteCard.ChapterSentences.Add(PageAndOrderNumber(pageNumber, kanji.TopicName, japanNoteCard.SentenceNoteCard.ItemQuestion));
+                }      
             }
             return japaneseWordNoteCards;
         }

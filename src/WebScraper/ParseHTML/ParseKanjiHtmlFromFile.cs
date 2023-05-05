@@ -168,12 +168,12 @@ namespace WebScraper.ParseHTML
 
         private static string GetMeaning(HtmlNode startDiv)
         {
-            var kanjiMeaning = startDiv.Descendants()
-                .FirstOrDefault(descendant => descendant.GetClasses().Contains("kanji-details__main-meanings"))
-                .InnerHtml.Trim();
+            var kanjiMeaningNode = startDiv.Descendants()
+                .FirstOrDefault(descendant => descendant.GetClasses().Contains("kanji-details__main-meanings"));
 
-            if (kanjiMeaning != null)
+            if (kanjiMeaningNode != null)
             {
+                var kanjiMeaning = kanjiMeaningNode.InnerHtml.Trim();
                 Console.WriteLine(kanjiMeaning);
                 return kanjiMeaning;
             }

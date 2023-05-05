@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace WebScraper.ParseHTML
+namespace WebScraper.ParseHTML.ParsingWords
 {
     public class JapanWordInfoFromDiv
     {
@@ -41,7 +41,7 @@ namespace WebScraper.ParseHTML
             //{
             //    japanNoteCard.SentenceNoteCard.ItemQuestion = word;
             //}
-            
+
         }
         /*Problem :  <span class="kanji-2-up kanji">おな</span><span></span><span class="kanji-2-up kanji">どし</span> and 同<span>い</span>年
  *  Cannot associate span with kanji because sometimes unqiue readings:
@@ -50,7 +50,7 @@ namespace WebScraper.ParseHTML
  */
         private void SetHintFromDiv(HtmlNode wordDiv)
         {
-            var hintSpan = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("furigana"));
+            var hintSpan = wordDiv.SelectNodes(".//span").FirstOrDefault(node => node.GetClasses().Contains("furigana"), null);
             var wordNode = wordDiv.SelectNodes(".//span").First(node => node.GetClasses().Contains("text"));
             var hiraganaList = new Queue<string>();
             if (wordNode != null)
@@ -89,7 +89,7 @@ namespace WebScraper.ParseHTML
                     }
                 }
                 //var hint = hintSpan.InnerText.Trim();
-                Hint = String.Join(" ", listOfStrings);
+                Hint = string.Join(" ", listOfStrings);
                 //japanNoteCard.SentenceNoteCard.Hint = String.Join(" ", listOfStrings);
             }
         }
@@ -113,7 +113,7 @@ namespace WebScraper.ParseHTML
             {
                 var jlptLevelFromDiv = jlptLevelNode.InnerText;
                 int result = -1;
-                Int32.TryParse(jlptLevelFromDiv.Replace("JLPT N", ""), out result);
+                int.TryParse(jlptLevelFromDiv.Replace("JLPT N", ""), out result);
                 if (result != -1)
                 {
                     //japanNoteCard.JLPTLevel = result;
@@ -132,7 +132,7 @@ namespace WebScraper.ParseHTML
                     strings.Add(define.InnerText);
                 }
 
-                var allDefineInOneString = String.Join(" -||- ", strings);
+                var allDefineInOneString = string.Join(" -||- ", strings);
                 //japanNoteCard.SentenceNoteCard.ItemAnswer = allDefineInOneString;
                 Defination = allDefineInOneString;
             }
